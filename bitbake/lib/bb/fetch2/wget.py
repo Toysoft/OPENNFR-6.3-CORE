@@ -33,11 +33,14 @@ import logging
 import errno
 import bb
 import bb.progress
+import socket
+import http.client
 import urllib.request, urllib.parse, urllib.error
 from   bb.fetch2 import FetchMethod
 from   bb.fetch2 import FetchError
 from   bb.fetch2 import logger
 from   bb.fetch2 import runfetchcmd
+from   bb.fetch2 import FetchConnectionCache
 from   bb.utils import export_proxies
 from   bs4 import BeautifulSoup
 from   bs4 import SoupStrainer
@@ -132,10 +135,6 @@ class Wget(FetchMethod):
         return True
 
     def checkstatus(self, fetch, ud, d, try_again=True):
-        import urllib.request, urllib.error, urllib.parse, socket, http.client
-        from urllib.response import addinfourl
-        from bb.fetch2 import FetchConnectionCache
-
         class HTTPConnectionCache(http.client.HTTPConnection):
             if fetch.connection_cache:
                 def connect(self):
@@ -185,7 +184,7 @@ class Wget(FetchMethod):
                 # request.
 
                 # Don't close connection when connection_cache is enabled,
-                if fetch.connection_cache is None: 
+                if fetch.connection_cache is None:
                     headers["Connection"] = "close"
                 else:
                     headers["Connection"] = "Keep-Alive" # Works for HTTP/1.0
@@ -252,7 +251,7 @@ class Wget(FetchMethod):
                         pass
                     closed = False
 
-                resp = addinfourl(fp_dummy(), r.msg, req.get_full_url())
+                resp = urllib.response.addinfourl(fp_dummy(), r.msg, req.get_full_url())
                 resp.code = r.status
                 resp.msg = r.reason
 
@@ -271,17 +270,16 @@ class Wget(FetchMethod):
                 fp.read()
                 fp.close()
 
-                newheaders = dict((k,v) for k,v in list(req.headers.items())
+                newheaders = dict((k, v) for k, v in list(req.headers.items())
                                   if k.lower() not in ("content-length", "content-type"))
                 return self.parent.open(urllib.request.Request(req.get_full_url(),
                                                         headers=newheaders,
                                                         origin_req_host=req.origin_req_host,
                                                         unverifiable=True))
 
-            """
-            Some servers (e.g. GitHub archives, hosted on Amazon S3) return 403
-            Forbidden when they actually mean 405 Method Not Allowed.
-            """
+
+            # Some servers (e.g. GitHub archives, hosted on Amazon S3) return 403
+            # Forbidden when they actually mean 405 Method Not Allowed.
             http_error_403 = http_error_405
 
 
@@ -292,15 +290,15 @@ class Wget(FetchMethod):
             """
             def redirect_request(self, req, fp, code, msg, headers, newurl):
                 newreq = urllib.request.HTTPRedirectHandler.redirect_request(self, req, fp, code, msg, headers, newurl)
-                newreq.get_method = lambda: req.get_method()
+                newreq.get_method = req.get_method
                 return newreq
         exported_proxies = export_proxies(d)
 
         handlers = [FixedHTTPRedirectHandler, HTTPMethodFallback]
-        if export_proxies:
+        if exported_proxies:
             handlers.append(urllib.request.ProxyHandler())
         handlers.append(CacheHTTPHandler())
-        # XXX: Since Python 2.7.9 ssl cert validation is enabled by default
+        # Since Python 2.7.9 ssl cert validation is enabled by default
         # see PEP-0476, this causes verification errors on some https servers
         # so disable by default.
         import ssl
@@ -319,19 +317,19 @@ class Wget(FetchMethod):
                 '''Adds Basic auth to http request, pass in login:password as string'''
                 import base64
                 encodeuser = base64.b64encode(login_str.encode('utf-8')).decode("utf-8")
-                authheader =  "Basic %s" % encodeuser
+                authheader = "Basic %s" % encodeuser
                 r.add_header("Authorization", authheader)
 
-            if ud.user:
-                add_basic_auth(ud.user, r)
+            if ud.user and ud.pswd:
+                add_basic_auth(ud.user + ':' + ud.pswd, r)
 
             try:
-                import netrc, urllib.parse
+                import netrc
                 n = netrc.netrc()
                 login, unused, password = n.authenticators(urllib.parse.urlparse(uri).hostname)
                 add_basic_auth("%s:%s" % (login, password), r)
             except (TypeError, ImportError, IOError, netrc.NetrcParseError):
-                 pass
+                pass
 
             with opener.open(r) as response:
                 pass
@@ -396,18 +394,14 @@ class Wget(FetchMethod):
         (oldpn, oldpv, oldsuffix) = old
         (newpn, newpv, newsuffix) = new
 
-        """
-        Check for a new suffix type that we have never heard of before
-        """
-        if (newsuffix):
+        # Check for a new suffix type that we have never heard of before
+        if newsuffix:
             m = self.suffix_regex_comp.search(newsuffix)
             if not m:
                 bb.warn("%s has a possible unknown suffix: %s" % (newpn, newsuffix))
                 return False
 
-        """
-        Not our package so ignore it
-        """
+        # Not our package so ignore it
         if oldpn != newpn:
             return False
 
@@ -473,10 +467,9 @@ class Wget(FetchMethod):
 
         return ""
 
-    def _check_latest_version_by_dir(self, dirver, package, package_regex,
-            current_version, ud, d):
+    def _check_latest_version_by_dir(self, dirver, package, package_regex, current_version, ud, d):
         """
-            Scan every directory in order to get upstream version.
+        Scan every directory in order to get upstream version.
         """
         version_dir = ['', '', '']
         version = ['', '', '']

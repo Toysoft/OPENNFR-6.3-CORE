@@ -9,19 +9,23 @@ SRCDATE = "20181121"
 
 inherit kernel machine_kernel_pr
 
-MACHINE_KERNEL_PR_append = ".16"
+MACHINE_KERNEL_PR_append = ".22"
 
 SRC_URI[md5sum] = "ede25f1c2c060f1059529a2896cee5a9"
 SRC_URI[sha256sum] = "ea4ba0433d252c18f38ff2f4dce4b70880e447e1cffdc2066d5a9b5f8098ae7e"
 
 SRC_URI = "http://source.mynonpublic.com/zgemma/linux-${PV}-${SRCDATE}-${ARCH}.tar.gz \
-        file://defconfig \
-        file://0002-ieee80211-increase-scan-result-expire-time.patch \
-        file://0002-log2-give-up-on-gcc-constant-optimizations.patch \
-        file://0003-dont-mark-register-as-const.patch \
-        file://0001-mmc-switch-1.8V.patch \
-        file://0001-remote.patch \
-        "
+    file://defconfig \
+    file://0002-ieee80211-increase-scan-result-expire-time.patch \
+    file://0002-log2-give-up-on-gcc-constant-optimizations.patch \
+    file://0003-dont-mark-register-as-const.patch \
+    file://0001-mmc-switch-1.8V.patch \
+    file://0001-remote.patch \
+    file://HauppaugeWinTV-dualHD.patch \
+    file://dib7000-linux_4.4.179.patch \
+    file://dvb-usb-linux_4.4.179.patch \
+    file://mt7601u_check_return_value_of_alloc_skb.patch \
+"
 
 # By default, kernel.bbclass modifies package names to allow multiple kernels
 # to be installed in parallel. We revert this change and rprovide the versioned

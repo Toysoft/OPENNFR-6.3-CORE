@@ -133,8 +133,6 @@ GLIBCVERSION = "2.23"
 OLDEST_KERNEL = "2.6.32"
 
 PREFERRED_PROVIDER_virtual/kernel = "linux-fulan"
-#PREFERRED_VERSION_linux-libc-headers = "3.1"
-PREFERRED_VERSION_linux-libc-headers = "2.6.32"
 PREFERRED_VERSION_directfb = "1.7.7"
 PREFERRED_VERSION_rt8812au = "4.3.14"
 PREFERRED_VERSION_samba = "3.%"
@@ -146,7 +144,7 @@ SERIAL_CONSOLE = "115200 ttyAS0"
 
 DVBPROVIDER = "kernel"
 
-MACHINE_FEATURES = "3dtv alsa switchoff kernel26 ext2 usbhost serial dvb-c singlecore no-cl-svr textlcd sh4booster no-nmap omb skins1080 directfb HDMI \
+MACHINE_FEATURES = "3dtv alsa switchoff kernel26 ext2 usbhost serial dvb-c singlecore no-cl-svr textlcd sh4booster no-nmap omb skins1080 directfb HDMI legacykernel \
 ${@bb.utils.contains('MACHINEBUILD', 'amiko8900', 'SCART RCA' , '', d)} \
 ${@bb.utils.contains('MACHINEBUILD', 'sognorevolution', 'SCART RCA' , '', d)} \
 ${@bb.utils.contains('MACHINEBUILD', 'arguspingulux', 'RCA' , '', d)} \

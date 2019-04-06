@@ -13,13 +13,15 @@ SRC_URI = "https://www.cpan.org/src/5.0/perl-${PV}.tar.gz;name=perl \
            file://0001-configure_tool.sh-do-not-quote-the-argument-to-comma.patch \
            file://0001-ExtUtils-MakeMaker-add-LDFLAGS-when-linking-binary-m.patch \
            file://0001-Somehow-this-module-breaks-through-the-perl-wrapper-.patch \
-           file://perl-configpm-switch.patch \
            file://errno_ver.diff \
            file://native-perlinc.patch \
            file://0001-perl-cross-add-LDFLAGS-when-linking-libperl.patch \
            file://perl-dynloader.patch \
            file://0001-configure_path.sh-do-not-hardcode-prefix-lib-as-libr.patch \
            "
+SRC_URI_append_class-native = " \
+           file://perl-configpm-switch.patch \
+"
 
 SRC_URI[perl.md5sum] = "838198c43d4f39d7af797e2f59c2bee5"
 SRC_URI[perl.sha256sum] = "3ebf85fe65df2ee165b22596540b7d5d42f84d4b72d84834f74e2e0b8956c347"
@@ -33,6 +35,8 @@ S = "${WORKDIR}/perl-${PV}"
 inherit upstream-version-is-even
 
 DEPENDS += "db gdbm zlib virtual/crypt"
+
+PERL_LIB_VER = "${@'.'.join(d.getVar('PV').split('.')[0:2])}.0"
 
 do_unpack_append() {
     bb.build.exec_func('do_copy_perlcross', d)
@@ -104,7 +108,7 @@ do_install() {
 
     # Fix up shared library
     rm ${D}/${libdir}/perl5/${PV}/${TARGET_ARCH}-linux/CORE/libperl.so
-    ln -sf ../../../../libperl.so.${PV} ${D}/${libdir}/perl5/${PV}/${TARGET_ARCH}-linux/CORE/libperl.so
+    ln -sf ../../../../libperl.so.${PERL_LIB_VER} ${D}/${libdir}/perl5/${PV}/${TARGET_ARCH}-linux/CORE/libperl.so
 }
 
 do_install_append_class-target() {

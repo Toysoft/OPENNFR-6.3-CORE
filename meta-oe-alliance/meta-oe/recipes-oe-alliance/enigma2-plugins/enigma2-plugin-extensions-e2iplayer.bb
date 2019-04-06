@@ -20,13 +20,13 @@ RDEPENDS_${PN} = " \
         python-compression \
         python-core \
         python-html \
+        python-e2icjson \
         python-json \
         python-shell \
         python-subprocess \
         python-textutils \
         "
 
-PACKAGES =+ " ${PN}-src"
 RDEPENDS_{PN}-src = "${PN}"
 FILES_${PN}-src = " \
         ${libdir}/enigma2/python/Plugins/*/*.py \

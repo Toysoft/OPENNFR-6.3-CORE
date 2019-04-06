@@ -214,7 +214,7 @@ def packages_filter_out_system(d):
     PN-dbg PN-doc PN-locale-eb-gb removed.
     """
     pn = d.getVar('PN')
-    blacklist = [pn + suffix for suffix in ('', '-dbg', '-dev', '-doc', '-locale', '-staticdev')]
+    blacklist = [pn + suffix for suffix in ('', '-dbg', '-dev', '-doc', '-locale', '-staticdev', '-src')]
     localepkg = pn + "-locale-"
     pkgs = []
 
@@ -307,6 +307,10 @@ def multiprocess_launch(target, items, d, extraargs=None):
             p.start()
             launched.append(p)
         for q in launched:
+            # Have to manually call update() to avoid deadlocks. The pipe can be full and
+            # transfer stalled until we try and read the results object but the subprocess won't exit
+            # as it still has data to write (https://bugs.python.org/issue8426)
+            q.update()
             # The finished processes are joined when calling is_alive()
             if not q.is_alive():
                 if q.exception:
