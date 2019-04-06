@@ -1,5 +1,5 @@
 
-PREFERRED_VERSION_linux-edision = "4.20"
+PREFERRED_VERSION_linux-edision = "5.0"
 
 
 KERNEL_MODULE_AUTOLOAD += "hci_uart"
@@ -80,7 +80,7 @@ MACHINE_FEATURES += "alsa 3dtv switchoff hdmicec bootsplash omb blindscan-tbs li
 BOOTLOGO_FILENAME = "splash.bin"
 
 DEFAULTTUNE = "aarch64"
-require conf/machine/include/arm/arch-armv8.inc
+require conf/machine/include/arm/arch-arm64.inc
 require conf/machine/include/soc-family.inc
 require conf/machine/box-hardware.inc
 require conf/machine/multilib.inc

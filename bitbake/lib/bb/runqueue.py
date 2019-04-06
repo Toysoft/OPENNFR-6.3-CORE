@@ -37,6 +37,7 @@ from bb import monitordisk
 import subprocess
 import pickle
 from multiprocessing import Process
+import shlex
 
 bblogger = logging.getLogger("BitBake")
 logger = logging.getLogger("BitBake.RunQueue")
@@ -48,6 +49,11 @@ def fn_from_tid(tid):
 
 def taskname_from_tid(tid):
     return tid.rsplit(":", 1)[1]
+
+def mc_from_tid(tid):
+    if tid.startswith('multiconfig:'):
+        return tid.split(':')[1]
+    return ""
 
 def split_tid(tid):
     (mc, fn, taskname, _) = split_tid_mcfn(tid)
@@ -409,6 +415,9 @@ class RunQueueData:
         explored_deps = {}
         msgs = []
 
+        class TooManyLoops(Exception):
+            pass
+
         def chain_reorder(chain):
             """
             Reorder a dependency chain so the lowest task id is first
@@ -461,7 +470,7 @@ class RunQueueData:
                         msgs.append("\n")
                     if len(valid_chains) > 10:
                         msgs.append("Aborted dependency loops search after 10 matches.\n")
-                        return msgs
+                        raise TooManyLoops
                     continue
                 scan = False
                 if revdep not in explored_deps:
@@ -480,8 +489,11 @@ class RunQueueData:
 
             explored_deps[tid] = total_deps
 
-        for task in tasks:
-            find_chains(task, [])
+        try:
+            for task in tasks:
+                find_chains(task, [])
+        except TooManyLoops:
+            pass
 
         return msgs
 
@@ -1220,12 +1232,12 @@ class RunQueue:
         if fakeroot:
             magic = magic + "beef"
             mcdata = self.cooker.databuilder.mcdata[mc]
-            fakerootcmd = mcdata.getVar("FAKEROOTCMD")
+            fakerootcmd = shlex.split(mcdata.getVar("FAKEROOTCMD"))
             fakerootenv = (mcdata.getVar("FAKEROOTBASEENV") or "").split()
             env = os.environ.copy()
             for key, value in (var.split('=') for var in fakerootenv):
                 env[key] = value
-            worker = subprocess.Popen([fakerootcmd, "bitbake-worker", magic], stdout=subprocess.PIPE, stdin=subprocess.PIPE, env=env)
+            worker = subprocess.Popen(fakerootcmd + ["bitbake-worker", magic], stdout=subprocess.PIPE, stdin=subprocess.PIPE, env=env)
         else:
             worker = subprocess.Popen(["bitbake-worker", magic], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         bb.utils.nonblockingfd(worker.stdout)
@@ -2095,10 +2107,23 @@ class RunQueueExecuteTasks(RunQueueExecute):
 
         return True
 
+    def filtermcdeps(self, task, deps):
+        ret = set()
+        mainmc = mc_from_tid(task)
+        for dep in deps:
+            mc = mc_from_tid(dep)
+            if mc != mainmc:
+                continue
+            ret.add(dep)
+        return ret
+
+    # We filter out multiconfig dependencies from taskdepdata we pass to the tasks 
+    # as most code can't handle them
     def build_taskdepdata(self, task):
         taskdepdata = {}
         next = self.rqdata.runtaskentries[task].depends
         next.add(task)
+        next = self.filtermcdeps(task, next)
         while next:
             additional = []
             for revdep in next:
@@ -2108,6 +2133,7 @@ class RunQueueExecuteTasks(RunQueueExecute):
                 provides = self.rqdata.dataCaches[mc].fn_provides[taskfn]
                 taskhash = self.rqdata.runtaskentries[revdep].hash
                 unihash = self.rqdata.runtaskentries[revdep].unihash
+                deps = self.filtermcdeps(task, deps)
                 taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash, unihash]
                 for revdep2 in deps:
                     if revdep2 not in taskdepdata:

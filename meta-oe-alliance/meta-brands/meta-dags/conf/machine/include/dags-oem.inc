@@ -433,12 +433,14 @@ DVBSKYPROVIDER = "kernel"
 
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS += " \
     dags-dvb-modules-${MACHINE_DRIVER} \
+    ${@bb.utils.contains("MACHINE_FEATURES", "proxy", "platform-util-${MACHINE}", "", d)} \
     dags-shutdown \
     "
 
 MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += "\
     kernel-module-cdfs \
     ${@bb.utils.contains('MACHINE_FEATURES', 'v3d', 'v3d-libgles-${MACHINE}', '',d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'swap', 'swapcreate-${MACHINE}', '',d)} \
     "
 
 MACHINE_EXTRA_RRECOMMENDS += " \
