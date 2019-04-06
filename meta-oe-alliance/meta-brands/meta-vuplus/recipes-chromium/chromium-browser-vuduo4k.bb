@@ -1,0 +1,7 @@
+SRCDATE="20181127_r0"
+SRC_URI[md5sum]="6333943d47777a52a0b6dd8f8b98ca8d"
+SRC_URI[sha256sum]="1c453e5254c3e419b15154a9a2b4219911f5ad5f00c03957b79ee3a0b4c004d4"
+
+require chromium-browser.inc
+
+COMPATIBLE_MACHINE = "^(vuduo4k)$"

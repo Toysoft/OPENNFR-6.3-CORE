@@ -1,0 +1,13 @@
+#NAME User - bouquets (TV)
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.ORF.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.Sky_HD.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.Sky_SD.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.Deutsch_HD.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.Deutsch_SD.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.Full_HD.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.Full_SD.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.dbe05.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.dbe07.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.dbe08.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.dbe09.tv
+#SERVICE: 1:7:1:0:0:0:0:0:0:0:userbouquet.favourites.tv

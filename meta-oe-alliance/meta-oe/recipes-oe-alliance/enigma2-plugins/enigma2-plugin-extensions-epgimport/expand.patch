@@ -1,0 +1,35 @@
+diff --git a/EPGImport/ExpandableSelectionList.py b/EPGImport/ExpandableSelectionList.py
+--- a/EPGImport/ExpandableSelectionList.py
++++ b/EPGImport/ExpandableSelectionList.py
+@@ -15,11 +15,11 @@
+ 
+ def loadSettings():
+ 	global cat_desc_loc, entry_desc_loc, cat_icon_loc, entry_icon_loc
+-	x, y, w, h = skin.parameters.get("SelectionListDescr", (25, 3, 650, 30))
++	x, y, w, h = skin.parameters.get("SelectionListDescr", (70, 7, 810, 50))
+ 	ind = x # Indent the entries by the same amount as the icon.
+ 	cat_desc_loc = (x, y, w, h)
+ 	entry_desc_loc = (x + ind, y, w - ind, h)
+-	x, y, w, h = skin.parameters.get("SelectionListLock", (0, 2, 25, 24))
++	x, y, w, h = skin.parameters.get("SelectionListLock", (10, 12, 60, 50))
+ 	cat_icon_loc = (x, 0, w, y + y + h) # The category icon is larger
+ 	entry_icon_loc = (x + ind, y, w, h)
+ 
+@@ -48,7 +48,7 @@
+ def expand(cat, value=True):
+ 	# cat is a list of data and icons
+ 	if cat[0][1] != value:
+-		ix, iy, iw, ih = skin.parameters.get("SelectionListLock",(0, 2, 25, 24))
++		ix, iy, iw, ih = skin.parameters.get("SelectionListLock",(10, 12, 60, 50))
+ 		if value:
+ 			icon = expandedIcon
+ 		else:
+@@ -68,7 +68,7 @@
+ 	def __init__(self, tree = None, enableWrapAround = False):
+ 		'tree is expected to be a list of categories'
+ 		MenuList.__init__(self, [], enableWrapAround, content = eListboxPythonMultiContent)
+-		font = skin.fonts.get("SelectionList", ("Regular", 20, 30))
++		font = skin.fonts.get("SelectionList", ("Regular", 30, 50))
+ 		self.l.setFont(0, gFont(font[0], font[1]))
+ 		self.l.setItemHeight(font[2])
+ 		self.tree = tree or []

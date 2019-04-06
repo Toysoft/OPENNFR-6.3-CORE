@@ -1,0 +1,31 @@
+diff --git a/src/plugin/plugin.py b/src/plugin/plugin.py
+--- a/src/plugin/plugin.py
++++ b/src/plugin/plugin.py
+@@ -152,6 +152,8 @@
+         Screen.__init__(self, session)
+         self.skinName = ["ServiceAppSettings", "Setup"]
+         ConfigListScreen.__init__(self, [], session)
++        global playerstartset
++	playerstartset = config_serviceapp.servicemp3.player.value        
+         self.setup_title = _("ServiceApp")
+         self.onLayoutFinish.append(self.init_configlist)
+         self.onClose.append(self.deinit_config)
+@@ -262,11 +264,14 @@
+         config_list.append(getConfigListEntry("", ConfigNothing()))
+         config_list.append(getConfigListEntry(_("ServiceExtEplayer3 (%s)" % str(serviceapp_client.ID_SERVICEEXTEPLAYER3)), ConfigNothing()))
+         config_list += self.player_options("exteplayer3", "serviceexteplayer3")
+-        self["config"].list = config_list
+-        self["config"].l.setList(config_list)
++        try:
++            self["config"].list = config_list
++            self["config"].l.setList(config_list)
++        except:
++            print "no list" 
+ 
+     def keyOk(self):
+-        if config_serviceapp.servicemp3.replace.isChanged():
++        if config_serviceapp.servicemp3.replace.isChanged() or playerstartset != config_serviceapp.servicemp3.player.value:
+             self.session.openWithCallback(self.save_settings_and_close, 
+                     MessageBox, _("Enigma2 playback system was changed and Enigma2 should be restarted\n\nDo you want to restart it now?"),
+                     type=MessageBox.TYPE_YESNO)
+

@@ -1,0 +1,10 @@
+require vuplus-libgles.inc
+
+COMPATIBLE_MACHINE = "^(vuuno4kse)$"
+
+SRCDATE = "20190104"
+SRCDATE_PR = "r0"
+PV="17.1"
+
+SRC_URI[md5sum] = "8967641d957107a7b275c2b9a84835fa"
+SRC_URI[sha256sum] = "ec523b71005a1107e6a2463772d99168c640f9d45fddb053478694c190461539"

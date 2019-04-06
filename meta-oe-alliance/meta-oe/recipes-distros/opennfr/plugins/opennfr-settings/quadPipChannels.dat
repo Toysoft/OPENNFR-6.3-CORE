@@ -1,0 +1,153 @@
+(lp0
+(iPlugins.Extensions.QuadPip.qpip
+QuadPipChannelEntry
+p1
+(dp2
+S'name'
+p3
+S'Quad PiP channel 1'
+p4
+sS'idx'
+p5
+I1
+sS'channel'
+p6
+(dp7
+S'1'
+p8
+(S'ORF1 HD'
+p9
+S'1:0:19:132F:3EF:1:C00000:0:0:0:'
+p10
+tp11
+sS'3'
+p12
+(S'ATV HD'
+p13
+S'1:0:19:33AC:3EB:1:C00000:0:0:0:'
+p14
+tp15
+sS'2'
+p16
+(S'ORF2K HD'
+p17
+S'1:0:19:33F6:3ED:1:C00000:0:0:0:'
+p18
+tp19
+sS'4'
+p20
+(S'PULS 4 HD Austria'
+p21
+S'1:0:19:14B7:407:1:C00000:0:0:0:'
+p22
+tp23
+ssba(iPlugins.Extensions.QuadPip.qpip
+QuadPipChannelEntry
+p24
+(dp25
+g3
+S'Quad PiP channel 2'
+p26
+sg5
+I2
+sg6
+(dp27
+S'1'
+p28
+(S'\xc2\x86Sky Cinema HD\xc2\x87'
+p29
+S'1:0:19:83:6:85:C00000:0:0:0:'
+p30
+tp31
+sS'3'
+p32
+(S'\xc2\x86Sky \xc2\x87Cinema \xc2\x86Bourne HD\xc2\x87'
+p33
+S'1:0:19:6B:C:85:C00000:0:0:0:'
+p34
+tp35
+sS'2'
+p36
+(S'Sky Cinema \xc2\x86Action HD\xc2\x87'
+p37
+S'1:0:19:74:B:85:C00000:0:0:0:'
+p38
+tp39
+sS'4'
+p40
+(S'\xc2\x86Sky \xc2\x87Cinema \xc2\x86Family HD\xc2\x87'
+p41
+S'1:0:19:8B:8:85:C00000:0:0:0:'
+p42
+tp43
+ssba(iPlugins.Extensions.QuadPip.qpip
+QuadPipChannelEntry
+p44
+(dp45
+g3
+S'Quad PiP channel 3'
+p46
+sg5
+I3
+sg6
+(dp47
+g28
+(S'ORF1 HD'
+p48
+S'1:0:19:132F:3EF:1:C00000:0:0:0:'
+p49
+tp50
+sg32
+(S'Das Erste HD'
+p51
+S'1:0:19:283D:3FB:1:C00000:0:0:0:'
+p52
+tp53
+sg36
+(S'\xc2\x86Sky Cinema HD\xc2\x87'
+p54
+S'1:0:19:83:6:85:C00000:0:0:0:'
+p55
+tp56
+sg40
+(S'ZDF HD'
+p57
+S'1:0:19:2B66:3F3:1:C00000:0:0:0:'
+p58
+tp59
+ssba(iPlugins.Extensions.QuadPip.qpip
+QuadPipChannelEntry
+p60
+(dp61
+g3
+S'Quad PiP channel 4'
+p62
+sg5
+I4
+sg6
+(dp63
+g28
+(S'DMAX HD'
+p64
+S'1:0:19:151A:455:1:C00000:0:0:0:'
+p65
+tp66
+sg32
+(S'n-tv HD'
+p67
+S'1:0:19:EF14:421:1:C00000:0:0:0:'
+p68
+tp69
+sg36
+(S'WELT HD'
+p70
+S'1:0:19:5274:41D:1:C00000:0:0:0:'
+p71
+tp72
+sg40
+(S'\xc2\x86Hist\xc2\x87ory \xc2\x86HD\xc2\x87'
+p73
+S'1:0:19:71:B:85:C00000:0:0:0:'
+p74
+tp75
+ssba.
