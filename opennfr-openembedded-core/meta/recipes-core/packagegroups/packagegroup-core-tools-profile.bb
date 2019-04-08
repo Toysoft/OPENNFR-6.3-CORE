@@ -37,11 +37,9 @@ SYSTEMTAP_riscv64 = ""
 
 # lttng-ust uses sched_getcpu() which is not there on for some platforms.
 LTTNGUST = "lttng-ust"
-LTTNGUST_libc-musl = ""
 LTTNGUST_arc = ""
 
 LTTNGTOOLS = "lttng-tools"
-LTTNGTOOLS_libc-musl = ""
 LTTNGTOOLS_arc = ""
 
 LTTNGMODULES = "lttng-modules"

@@ -220,7 +220,7 @@ def buildcfg_neededvars(d):
         bb.fatal('The following variable(s) were not set: %s\nPlease set them directly, or choose a MACHINE or DISTRO that sets them.' % ', '.join(pesteruser))
 
 addhandler base_eventhandler
-base_eventhandler[eventmask] = "bb.event.ConfigParsed bb.event.MultiConfigParsed bb.event.BuildStarted bb.event.RecipePreFinalise bb.runqueue.sceneQueueComplete bb.event.RecipeParsed"
+base_eventhandler[eventmask] = "bb.event.ConfigParsed bb.event.MultiConfigParsed bb.event.BuildStarted bb.event.RecipePreFinalise bb.event.RecipeParsed"
 python base_eventhandler() {
     import bb.runqueue
 
@@ -274,18 +274,6 @@ python base_eventhandler() {
             d.delVar("PREFERRED_PROVIDER_virtual/${TARGET_PREFIX}g++")
             d.delVar("PREFERRED_PROVIDER_virtual/${TARGET_PREFIX}compilerlibs")
 
-    if isinstance(e, bb.runqueue.sceneQueueComplete):
-        completions = d.expand("${STAGING_DIR}/sstatecompletions")
-        if os.path.exists(completions):
-            cmds = set()
-            with open(completions, "r") as f:
-                cmds = set(f)
-            d.setVar("completion_function", "\n".join(cmds))
-            d.setVarFlag("completion_function", "func", "1")
-            bb.debug(1, "Executing SceneQueue Completion commands: %s" % "\n".join(cmds))
-            bb.build.exec_func("completion_function", d)
-            os.remove(completions)
-
     if isinstance(e, bb.event.RecipeParsed):
         #
         # If we have multiple providers of virtual/X and a PREFERRED_PROVIDER_virtual/X is set
@@ -310,7 +298,6 @@ CLEANBROKEN = "0"
 
 addtask configure after do_patch
 do_configure[dirs] = "${B}"
-do_prepare_recipe_sysroot[deptask] = "do_populate_sysroot"
 base_do_configure() {
 	if [ -n "${CONFIGURESTAMPFILE}" -a -e "${CONFIGURESTAMPFILE}" ]; then
 		if [ "`cat ${CONFIGURESTAMPFILE}`" != "${BB_TASKHASH}" ]; then

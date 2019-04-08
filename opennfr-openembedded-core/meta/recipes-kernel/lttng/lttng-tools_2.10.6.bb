@@ -11,7 +11,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=01d7fc4496aacf37d90df90b90b0cac1 \
 
 DEPENDS = "liburcu popt libxml2 util-linux"
 RDEPENDS_${PN} = "libgcc"
-RDEPENDS_${PN}-ptest += "make perl bash gawk ${PN} babeltrace procps perl-module-overloading coreutils util-linux"
+RDEPENDS_${PN}-ptest += "make perl bash gawk ${PN} babeltrace procps perl-module-overloading coreutils util-linux kmod"
 RDEPENDS_${PN}-ptest_append_libc-glibc = " glibc-utils"
 RDEPENDS_${PN}-ptest_append_libc-musl = " musl-utils"
 # babelstats.pl wants getopt-long
@@ -26,13 +26,19 @@ PACKAGECONFIG[python] = "--enable-python-bindings ${PYTHON_OPTION},,python3 swig
 PACKAGECONFIG[lttng-ust] = "--with-lttng-ust, --without-lttng-ust, lttng-ust"
 PACKAGECONFIG[kmod] = "--with-kmod, --without-kmod, kmod"
 PACKAGECONFIG[manpages] = "--enable-man-pages, --disable-man-pages, asciidoc-native xmlto-native libxslt-native"
-PACKAGECONFIG_remove_libc-musl = "lttng-ust"
 PACKAGECONFIG_remove_arc = "lttng-ust"
 
 SRC_URI = "https://lttng.org/files/lttng-tools/lttng-tools-${PV}.tar.bz2 \
            file://x32.patch \
            file://run-ptest \
            file://lttng-sessiond.service \
+           file://0001-Fix-tests-link-libpause_consumer-on-liblttng-ctl.patch \
+           file://0002-Fix-test-skip-test_getcpu_override-on-single-thread-.patch \
+           file://0003-Fix-test-unit-the-tree-origin-can-be-a-symlink-itsel.patch \
+           file://0004-Skip-when-testapp-is-not-present.patch\
+           file://0005-Tests-use-modprobe-to-test-for-the-presence-of-lttng.patch \
+           file://0006-Tests-check-for-lttng-modules-presence.patch \
+           file://0007-Fix-getgrnam-is-not-MT-Safe-use-getgrnam_r.patch \
            "
 
 SRC_URI[md5sum] = "e88c521b5da6bb48a8187af633336ecc"
