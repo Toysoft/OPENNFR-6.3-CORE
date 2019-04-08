@@ -1,8 +1,8 @@
-SRCDATE = "20190104"
+SRCDATE = "20190331"
 
 require maxytec-fastboot.inc
 
-SRC_URI[md5sum] = "0768934c29d218ce6af25c332ee93e3f"
-SRC_URI[sha256sum] = "af15ff3661beb2383e4085608c377e686b97072a05b55f8a9705c29acea0d10c"
+SRC_URI[md5sum] = "ca6e8673efc53ccf08ba6a6fbb54bfdd"
+SRC_URI[sha256sum] = "6472207ee2be4270d8804c138dd834e4084bb5e31a04ce11a34ea5c550d2bc87"
 
 COMPATIBLE_MACHINE = "multibox"

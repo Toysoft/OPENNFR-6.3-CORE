@@ -42,7 +42,7 @@ inherit autotools multilib_header python-dir pythonnative ptest
 
 CONFIGUREOPTS += " --with-system-ffi "
 
-EXTRA_OECONF += "ac_cv_file__dev_ptmx=yes ac_cv_file__dev_ptc=no"
+EXTRA_OECONF += "ac_cv_file__dev_ptmx=yes ac_cv_file__dev_ptc=no ac_cv_working_tzset=yes"
 
 PACKAGECONFIG ??= "bdb"
 PACKAGECONFIG[bdb] = ",,db"
@@ -176,7 +176,7 @@ FILES_${PN}-misc = "${libdir}/python${PYTHON_MAJMIN}"
 RDEPENDS_${PN}-modules += "${PN}-misc"
 
 # ptest
-RDEPENDS_${PN}-ptest = "${PN}-modules ${PN}-tests unzip"
+RDEPENDS_${PN}-ptest = "${PN}-modules ${PN}-tests unzip tzdata-europe coreutils"
 RDEPENDS_${PN}-tkinter += "${@bb.utils.contains('PACKAGECONFIG', 'tk', 'tk', '', d)}"
 # catch manpage
 PACKAGES += "${PN}-man"

@@ -11,6 +11,8 @@ SRCBRANCH = "5.18.fb"
 PV = "5.18.2"
 
 SRC_URI = "git://github.com/facebook/${BPN}.git;branch=${SRCBRANCH} \
+           file://0001-Disable-Wshadow-and-do-not-mark-default-copy-constru.patch \
+           file://0001-utilities-Fix-build-failure-with-Werror-maybe-uninit.patch \
           "
 
 S = "${WORKDIR}/git"

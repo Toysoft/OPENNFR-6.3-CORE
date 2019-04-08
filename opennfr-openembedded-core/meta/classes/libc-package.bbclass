@@ -37,13 +37,10 @@ python __anonymous () {
                 d.setVar("DEPENDS", depends)
                 d.setVar("GLIBC_INTERNAL_USE_BINARY_LOCALE", "compile")
                 break
-
-    # try to fix disable charsets/locales/locale-code compile fail
-    if bb.utils.contains('DISTRO_FEATURES', 'libc-charsets libc-locales libc-locale-code', True, False, d):
-        d.setVar('PACKAGE_NO_GCONV', '0')
-    else:
-        d.setVar('PACKAGE_NO_GCONV', '1')
 }
+
+# try to fix disable charsets/locales/locale-code compile fail
+PACKAGE_NO_GCONV ?= "0"
 
 OVERRIDES_append = ":${TARGET_ARCH}-${TARGET_OS}"
 
@@ -67,9 +64,14 @@ do_prep_locale_tree() {
 	for i in $treedir/${datadir}/i18n/charmaps/*gz; do 
 		gunzip $i
 	done
-	tar -cf - -C ${LOCALETREESRC}${base_libdir} -p . | tar -xf - -C $treedir/${base_libdir}
-	if [ -f ${STAGING_DIR_NATIVE}${prefix_native}/lib/libgcc_s.* ]; then
-		tar -cf - -C ${STAGING_DIR_NATIVE}/${prefix_native}/${base_libdir} -p libgcc_s.* | tar -xf - -C $treedir/${base_libdir}
+	# The extract pattern "./l*.so*" is carefully selected so that it will
+	# match ld*.so and lib*.so*, but not any files in the gconv directory
+	# (if it exists). This makes sure we only unpack the files we need.
+	# This is important in case usrmerge is set in DISTRO_FEATURES, which
+	# means ${base_libdir} == ${libdir}.
+	tar -cf - -C ${LOCALETREESRC}${base_libdir} -p . | tar -xf - -C $treedir/${base_libdir} --wildcards './l*.so*'
+	if [ -f ${STAGING_LIBDIR_NATIVE}/libgcc_s.* ]; then
+		tar -cf - -C ${STAGING_LIBDIR_NATIVE} -p libgcc_s.* | tar -xf - -C $treedir/${base_libdir}
 	fi
 	install -m 0755 ${LOCALETREESRC}${bindir}/localedef $treedir/${base_bindir}
 }
@@ -278,7 +280,7 @@ python package_do_split_gconvs () {
             qemu_options = d.getVar('QEMU_OPTIONS')
 
             cmd = "PSEUDO_RELOADED=YES PATH=\"%s\" I18NPATH=\"%s\" %s -L %s \
-                -E LD_LIBRARY_PATH=%s %s %s/bin/localedef %s" % \
+                -E LD_LIBRARY_PATH=%s %s %s${base_bindir}/localedef %s" % \
                 (path, i18npath, qemu, treedir, ldlibdir, qemu_options, treedir, localedef_opts)
 
         commands["%s/%s" % (outputpath, name)] = cmd
@@ -343,11 +345,14 @@ python package_do_split_gconvs () {
         makefile = oe.path.join(d.getVar("WORKDIR"), "locale-tree", "Makefile")
         m = open(makefile, "w")
         m.write("all: %s\n\n" % " ".join(commands.keys()))
-        for cmd in commands:
+        total = len(commands)
+        for i, cmd in enumerate(commands):
             m.write(cmd + ":\n")
+            m.write("\t@echo 'Progress %d/%d'\n" % (i, total))
             m.write("\t" + commands[cmd] + "\n\n")
         m.close()
         d.setVar("EXTRA_OEMAKE", "-C %s ${PARALLEL_MAKE}" % (os.path.dirname(makefile)))
+        d.setVarFlag("oe_runmake", "progress", "outof:Progress\s(\d+)/(\d+)")
         bb.note("Executing binary locale generation makefile")
         bb.build.exec_func("oe_runmake", d)
         bb.note("collecting binary locales from locale tree")

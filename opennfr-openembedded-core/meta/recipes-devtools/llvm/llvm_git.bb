@@ -12,27 +12,27 @@ DEPENDS = "libffi libxml2 zlib ninja-native llvm-native"
 
 RDEPENDS_${PN}_append_class-target = " ncurses-terminfo"
 
-inherit perlnative pythonnative cmake pkgconfig
+inherit cmake pkgconfig
 
 PROVIDES += "llvm${PV}"
 
 LLVM_RELEASE = "${PV}"
 LLVM_DIR = "llvm${LLVM_RELEASE}"
 
-SRCREV = "e5cc6808dc0d5b773479bf36c51d59d0d3174733"
-BRANCH = "release_${MAJOR_VERSION}${MINOR_VERSION}"
+SRCREV = "d2298e74235598f15594fe2c99bbac870a507c59"
+
+BRANCH = "release/${MAJOR_VERSION}.x"
 MAJOR_VERSION = "8"
 MINOR_VERSION = "0"
 PATCH_VERSION = "0"
 SOLIBVER = "1"
-PV = "${MAJOR_VERSION}.${MINOR_VERSION}"
-SRC_URI = "git://github.com/llvm-mirror/llvm.git;branch=${BRANCH} \
+PV = "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
+SRC_URI = "git://github.com/llvm/llvm-project.git;branch=${BRANCH} \
            file://0001-llvm-TargetLibraryInfo-Undefine-libc-functions-if-th.patch \
            file://0002-llvm-allow-env-override-of-exe-path.patch \
           "
-UPSTREAM_CHECK_COMMITS = "1"
 
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/git/llvm"
 
 LLVM_INSTALL_DIR = "${WORKDIR}/llvm-install"
 
@@ -66,9 +66,12 @@ EXTRA_OECMAKE += "-DLLVM_ENABLE_ASSERTIONS=OFF \
                   -DLLVM_BINDINGS_LIST='' \
                   -DLLVM_LINK_LLVM_DYLIB=ON \
                   -DLLVM_ENABLE_FFI=ON \
+                  -DLLVM_ENABLE_RTTI=ON \
                   -DFFI_INCLUDE_DIR=$(pkg-config --variable=includedir libffi) \
                   -DLLVM_OPTIMIZED_TABLEGEN=ON \
                   -DLLVM_TARGETS_TO_BUILD='${LLVM_TARGETS}' \
+                  -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
+                  -DPYTHON_EXECUTABLE=${HOSTTOOLS_DIR}/python2 \
                   -G Ninja"
 
 EXTRA_OECMAKE_append_class-target = "\
@@ -82,6 +85,8 @@ EXTRA_OECMAKE_append_class-nativesdk = "\
                   -DLLVM_TABLEGEN=${STAGING_BINDIR_NATIVE}/llvm-tblgen${PV} \
                   -DLLVM_CONFIG_PATH=${STAGING_BINDIR_NATIVE}/llvm-config${PV} \
                  "
+
+CXXFLAGS_append_class-target_powerpc = " -mlongcall"
 
 do_configure_prepend() {
 # Fix paths in llvm-config

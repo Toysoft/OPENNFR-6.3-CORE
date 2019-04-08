@@ -21,8 +21,6 @@ LIC_FILES_CHKSUM = "file://README.licensing;md5=1715f5ee3e01203ca1e1e0b9ee65918c
 #gtk-doc is not enabled as it requires xmlto which requires util-linux
 inherit autotools gettext manpages pkgconfig systemd update-alternatives python3-dir bash-completion ptest
 DEPENDS = "zlib ncurses virtual/crypt"
-DEPENDS_append_class-native = " lzo-native"
-DEPENDS_append_class-nativesdk = " lzo-native"
 
 MAJOR_VERSION = "${@'.'.join(d.getVar('PV').split('.')[0:2])}"
 SRC_URI = "${KERNELORG_MIRROR}/linux/utils/${BPN}/v${MAJOR_VERSION}/${BP}.tar.xz \
@@ -105,6 +103,9 @@ EXTRA_OECONF = "\
 "
 
 PACKAGECONFIG_class-target ?= "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}"
+# inherit manpages requires this to be present, however util-linux does not have 
+# configuration options, and installs manpages always
+PACKAGECONFIG[manpages] = ""
 PACKAGECONFIG[pam] = "--enable-su --enable-runuser,--disable-su --disable-runuser, libpam,"
 # Respect the systemd feature for uuidd
 PACKAGECONFIG[systemd] = "--with-systemd --with-systemdsystemunitdir=${systemd_system_unitdir}, --without-systemd --without-systemdsystemunitdir,systemd"
@@ -130,8 +131,8 @@ FILES_${PN}-pylibmount = "${PYTHON_SITEPACKAGES_DIR}/libmount/pylibmount.so \
                           ${PYTHON_SITEPACKAGES_DIR}/libmount/__pycache__/*"
 
 # Util-linux' blkid replaces the e2fsprogs one
-RCONFLICTS_${PN}-blkid = "e2fsprogs-blkid"
-RREPLACES_${PN}-blkid = "e2fsprogs-blkid"
+RCONFLICTS_${PN}-blkid = "${MLPREFIX}e2fsprogs-blkid"
+RREPLACES_${PN}-blkid = "${MLPREFIX}e2fsprogs-blkid"
 
 RRECOMMENDS_${PN}_class-native = ""
 RRECOMMENDS_${PN}_class-nativesdk = ""

@@ -51,5 +51,6 @@ RDEPENDS_${PN} = "\
     ${@bb.utils.contains_any("FLASHSIZE", "64", "", " \
         iproute2 \
         ntfs-3g \
+        unrar \
     ", d)} \
     "

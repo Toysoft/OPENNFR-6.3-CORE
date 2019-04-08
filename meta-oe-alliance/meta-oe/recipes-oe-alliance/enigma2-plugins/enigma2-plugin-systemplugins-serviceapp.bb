@@ -11,7 +11,6 @@ RREPLACES_${PN} = "enigma2-plugin-extensions-serviceapp"
 SRCREV = "${AUTOREV}"
 SRC_URI = " \
     git://github.com/mx3L/serviceapp.git;branch=develop \
-    file://serviceapp.patch \
     "
 
 S = "${WORKDIR}/git"

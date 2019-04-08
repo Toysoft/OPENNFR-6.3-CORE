@@ -6,10 +6,11 @@ HOMEPAGE = "http://rg3.github.io/youtube-dl/"
 SECTION = "devel/python"
 LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=7246f848faa4e9c9fc0ea91122d6e680"
-DEPENDS = "libxml2 bash-completion"
-SRCREV = "bfc8eeea57251796d44f1e10b61d06760690bc25"
-PV = "2019.01.16"
 
+DEPENDS = "libxml2 bash-completion"
+
+SRCREV = "${AUTOREV}"
+PV = "2019.04.01+git${SRCPV}"
 PR = "r1"
 
 SRC_URI = "git://github.com/rg3/youtube-dl.git;branch=master"
@@ -40,7 +41,6 @@ RDEPENDS_${PN} = " \
     python-html \
     "
 
-PACKAGES =+ " ${PN}-src"
 RDEPENDS_{PN}-src = "${PN}"
 FILES_${PN}-src = " \
     ${libdir}/${PYTHON_DIR}/site-packages/*/*.py \

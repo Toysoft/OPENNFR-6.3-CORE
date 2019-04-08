@@ -13,13 +13,15 @@ SRC_URI = "https://www.cpan.org/src/5.0/perl-${PV}.tar.gz;name=perl \
            file://0001-configure_tool.sh-do-not-quote-the-argument-to-comma.patch \
            file://0001-ExtUtils-MakeMaker-add-LDFLAGS-when-linking-binary-m.patch \
            file://0001-Somehow-this-module-breaks-through-the-perl-wrapper-.patch \
-           file://perl-configpm-switch.patch \
            file://errno_ver.diff \
            file://native-perlinc.patch \
            file://0001-perl-cross-add-LDFLAGS-when-linking-libperl.patch \
            file://perl-dynloader.patch \
            file://0001-configure_path.sh-do-not-hardcode-prefix-lib-as-libr.patch \
            "
+SRC_URI_append_class-native = " \
+           file://perl-configpm-switch.patch \
+"
 
 SRC_URI[perl.md5sum] = "838198c43d4f39d7af797e2f59c2bee5"
 SRC_URI[perl.sha256sum] = "3ebf85fe65df2ee165b22596540b7d5d42f84d4b72d84834f74e2e0b8956c347"
@@ -33,6 +35,8 @@ S = "${WORKDIR}/perl-${PV}"
 inherit upstream-version-is-even
 
 DEPENDS += "db gdbm zlib virtual/crypt"
+
+PERL_LIB_VER = "${@'.'.join(d.getVar('PV').split('.')[0:2])}.0"
 
 do_unpack_append() {
     bb.build.exec_func('do_copy_perlcross', d)
@@ -103,8 +107,8 @@ do_install() {
     install lib/ExtUtils/typemap ${D}${libdir}/perl5/${PV}/ExtUtils/
 
     # Fix up shared library
-    rm ${D}/${libdir}/perl5/${PV}/${TARGET_ARCH}-linux/CORE/libperl.so
-    ln -sf ../../../../libperl.so.${PV} ${D}/${libdir}/perl5/${PV}/${TARGET_ARCH}-linux/CORE/libperl.so
+    rm ${D}/${libdir}/perl5/${PV}/*/CORE/libperl.so
+    ln -sf ../../../../libperl.so.${PERL_LIB_VER} $(echo ${D}/${libdir}/perl5/${PV}/*/CORE)/libperl.so
 }
 
 do_install_append_class-target() {
@@ -167,6 +171,39 @@ perl_package_preprocess () {
             ${PKGD}${libdir}/perl5/${PV}/pod/*.pod \
             ${PKGD}${libdir}/perl5/config.sh
 }
+
+inherit update-alternatives
+
+ALTERNATIVE_PRIORITY = "100"
+
+ALTERNATIVE_${PN} = "corelist cpan enc2xs encguess h2ph h2xs instmodsh json_pp libnetcfg \
+                     piconv pl2pm pod2html pod2man pod2text pod2usage podchecker podselect \
+                     prove ptar ptardiff ptargrep shasum splain xsubpp zipdetails"
+ALTERNATIVE_LINK_NAME[corelist] = "${bindir}/corelist"
+ALTERNATIVE_LINK_NAME[cpan] = "${bindir}/cpan"
+ALTERNATIVE_LINK_NAME[enc2xs] = "${bindir}/enc2xs"
+ALTERNATIVE_LINK_NAME[encguess] = "${bindir}/encguess"
+ALTERNATIVE_LINK_NAME[h2ph] = "${bindir}/h2ph"
+ALTERNATIVE_LINK_NAME[h2xs] = "${bindir}/h2xs"
+ALTERNATIVE_LINK_NAME[instmodsh] = "${bindir}/instmodsh"
+ALTERNATIVE_LINK_NAME[json_pp] = "${bindir}/json_pp"
+ALTERNATIVE_LINK_NAME[libnetcfg] = "${bindir}/libnetcfg"
+ALTERNATIVE_LINK_NAME[piconv] = "${bindir}/piconv"
+ALTERNATIVE_LINK_NAME[pl2pm] = "${bindir}/pl2pm"
+ALTERNATIVE_LINK_NAME[pod2html] = "${bindir}/pod2html"
+ALTERNATIVE_LINK_NAME[pod2man] = "${bindir}/pod2man"
+ALTERNATIVE_LINK_NAME[pod2text] = "${bindir}/pod2text"
+ALTERNATIVE_LINK_NAME[pod2usage] = "${bindir}/pod2usage"
+ALTERNATIVE_LINK_NAME[podchecker] = "${bindir}/podchecker"
+ALTERNATIVE_LINK_NAME[podselect] = "${bindir}/podselect"
+ALTERNATIVE_LINK_NAME[prove] = "${bindir}/prove"
+ALTERNATIVE_LINK_NAME[ptar] = "${bindir}/ptar"
+ALTERNATIVE_LINK_NAME[ptardiff] = "${bindir}/ptardiff"
+ALTERNATIVE_LINK_NAME[ptargrep] = "${bindir}/ptargrep"
+ALTERNATIVE_LINK_NAME[shasum] = "${bindir}/shasum"
+ALTERNATIVE_LINK_NAME[splain] = "${bindir}/splain"
+ALTERNATIVE_LINK_NAME[xsubpp] = "${bindir}/xsubpp"
+ALTERNATIVE_LINK_NAME[zipdetails] = "${bindir}/zipdetails"
 
 require perl-ptest.inc
 

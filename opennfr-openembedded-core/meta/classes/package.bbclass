@@ -344,7 +344,7 @@ def parse_debugsources_from_dwarfsrcfiles_output(dwarfsrcfiles_output):
 
     return debugfiles.keys()
 
-def append_source_info(file, sourcefile, d, fatal=True):
+def source_info(file, d, fatal=True):
     import subprocess
 
     cmd = ["dwarfsrcfiles", file]
@@ -363,22 +363,15 @@ def append_source_info(file, sourcefile, d, fatal=True):
         bb.note(msg)
 
     debugsources = parse_debugsources_from_dwarfsrcfiles_output(output)
-    # filenames are null-separated - this is an artefact of the previous use
-    # of rpm's debugedit, which was writing them out that way, and the code elsewhere
-    # is still assuming that.
-    debuglistoutput = '\0'.join(debugsources) + '\0'
-    lf = bb.utils.lockfile(sourcefile + ".lock")
-    with open(sourcefile, 'a') as sf:
-        sf.write(debuglistoutput)
-    bb.utils.unlockfile(lf)
 
+    return list(debugsources)
 
-def splitdebuginfo(file, dvar, debugdir, debuglibdir, debugappend, debugsrcdir, sourcefile, d):
+def splitdebuginfo(file, dvar, debugdir, debuglibdir, debugappend, debugsrcdir, d):
     # Function to split a single file into two components, one is the stripped
     # target system binary, the other contains any debugging information. The
     # two files are linked to reference each other.
     #
-    # sourcefile is also generated containing a list of debugsources
+    # return a mapping of files:debugsources
 
     import stat
     import subprocess
@@ -386,6 +379,7 @@ def splitdebuginfo(file, dvar, debugdir, debuglibdir, debugappend, debugsrcdir, 
     src = file[len(dvar):]
     dest = debuglibdir + os.path.dirname(src) + debugdir + "/" + os.path.basename(src) + debugappend
     debugfile = dvar + dest
+    sources = []
 
     # Split the file...
     bb.utils.mkdirhier(os.path.dirname(debugfile))
@@ -397,7 +391,7 @@ def splitdebuginfo(file, dvar, debugdir, debuglibdir, debugappend, debugsrcdir, 
 
     # We ignore kernel modules, we don't generate debug info files.
     if file.find("/lib/modules/") != -1 and file.endswith(".ko"):
-        return 1
+        return (file, sources)
 
     newmode = None
     if not os.access(file, os.W_OK) or os.access(file, os.R_OK):
@@ -407,7 +401,7 @@ def splitdebuginfo(file, dvar, debugdir, debuglibdir, debugappend, debugsrcdir, 
 
     # We need to extract the debug src information here...
     if debugsrcdir:
-        append_source_info(file, sourcefile, d)
+        sources = source_info(file, d)
 
     bb.utils.mkdirhier(os.path.dirname(debugfile))
 
@@ -419,17 +413,26 @@ def splitdebuginfo(file, dvar, debugdir, debuglibdir, debugappend, debugsrcdir, 
     if newmode:
         os.chmod(file, origmode)
 
-    return 0
+    return (file, sources)
 
-def copydebugsources(debugsrcdir, d):
+def copydebugsources(debugsrcdir, sources, d):
     # The debug src information written out to sourcefile is further processed
     # and copied to the destination here.
 
     import stat
     import subprocess
 
-    sourcefile = d.expand("${WORKDIR}/debugsources.list")
-    if debugsrcdir and os.path.isfile(sourcefile):
+    if debugsrcdir and sources:
+        sourcefile = d.expand("${WORKDIR}/debugsources.list")
+        bb.utils.remove(sourcefile)
+
+        # filenames are null-separated - this is an artefact of the previous use
+        # of rpm's debugedit, which was writing them out that way, and the code elsewhere
+        # is still assuming that.
+        debuglistoutput = '\0'.join(sources) + '\0'
+        with open(sourcefile, 'a') as sf:
+           sf.write(debuglistoutput)
+
         dvar = d.getVar('PKGD')
         strip = d.getVar("STRIP")
         objcopy = d.getVar("OBJCOPY")
@@ -933,9 +936,6 @@ python split_and_strip_files () {
         debuglibdir = ""
         debugsrcdir = "/usr/src/debug"
 
-    sourcefile = d.expand("${WORKDIR}/debugsources.list")
-    bb.utils.remove(sourcefile)
-
     #
     # First lets figure out all of the files we may have to process ... do this only once!
     #
@@ -1040,11 +1040,15 @@ python split_and_strip_files () {
     # First lets process debug splitting
     #
     if (d.getVar('INHIBIT_PACKAGE_DEBUG_SPLIT') != '1'):
-        oe.utils.multiprocess_launch(splitdebuginfo, list(elffiles), d, extraargs=(dvar, debugdir, debuglibdir, debugappend, debugsrcdir, sourcefile, d))
+        results = oe.utils.multiprocess_launch(splitdebuginfo, list(elffiles), d, extraargs=(dvar, debugdir, debuglibdir, debugappend, debugsrcdir, d))
 
         if debugsrcdir and not targetos.startswith("mingw"):
             for file in staticlibs:
-                append_source_info(file, sourcefile, d, fatal=False)
+                results.extend(source_info(file, d, fatal=False))
+
+        sources = set()
+        for r in results:
+            sources.update(r[1])
 
         # Hardlink our debug symbols to the other hardlink copies
         for ref in inodes:
@@ -1092,7 +1096,7 @@ python split_and_strip_files () {
 
         # Process the debugsrcdir if requested...
         # This copies and places the referenced sources for later debugging...
-        copydebugsources(debugsrcdir, d)
+        copydebugsources(debugsrcdir, sources, d)
     #
     # End of debug splitting
     #
@@ -1124,7 +1128,7 @@ python populate_packages () {
     workdir = d.getVar('WORKDIR')
     outdir = d.getVar('DEPLOY_DIR')
     dvar = d.getVar('PKGD')
-    packages = d.getVar('PACKAGES')
+    packages = d.getVar('PACKAGES').split()
     pn = d.getVar('PN')
 
     bb.utils.mkdirhier(outdir)
@@ -1134,32 +1138,34 @@ python populate_packages () {
 
     split_source_package = (d.getVar('PACKAGE_DEBUG_SPLIT_STYLE') == 'debug-with-srcpkg')
 
-    # If debug-with-srcpkg mode is enabled then the src package is added
-    # into the package list and the source directory as its main content
+    # If debug-with-srcpkg mode is enabled then add the source package if it
+    # doesn't exist and add the source file contents to the source package.
     if split_source_package:
         src_package_name = ('%s-src' % d.getVar('PN'))
-        packages += (' ' + src_package_name)
+        if not src_package_name in packages:
+            packages.append(src_package_name)
         d.setVar('FILES_%s' % src_package_name, '/usr/src/debug')
 
     # Sanity check PACKAGES for duplicates
     # Sanity should be moved to sanity.bbclass once we have the infrastructure
     package_dict = {}
 
-    for i, pkg in enumerate(packages.split()):
+    for i, pkg in enumerate(packages):
         if pkg in package_dict:
             msg = "%s is listed in PACKAGES multiple times, this leads to packaging errors." % pkg
             package_qa_handle_error("packages-list", msg, d)
-        # If debug-with-srcpkg mode is enabled then the src package will have
-        # priority over dbg package when assigning the files.
-        # This allows src package to include source files and remove them from dbg.
-        elif split_source_package and pkg.endswith("-src"):
+        # Ensure the source package gets the chance to pick up the source files
+        # before the debug package by ordering it first in PACKAGES. Whether it
+        # actually picks up any source files is controlled by
+        # PACKAGE_DEBUG_SPLIT_STYLE.
+        elif pkg.endswith("-src"):
             package_dict[pkg] = (10, i)
         elif autodebug and pkg.endswith("-dbg"):
             package_dict[pkg] = (30, i)
         else:
             package_dict[pkg] = (50, i)
-    package_list = sorted(package_dict.keys(), key=package_dict.get)
-    d.setVar('PACKAGES', ' '.join(package_list))
+    packages = sorted(package_dict.keys(), key=package_dict.get)
+    d.setVar('PACKAGES', ' '.join(packages))
     pkgdest = d.getVar('PKGDEST')
 
     seen = []
@@ -1177,7 +1183,7 @@ python populate_packages () {
             if "/.debug/" in path or path.endswith("/.debug"):
                 debug.append(path)
 
-    for pkg in package_list:
+    for pkg in packages:
         root = os.path.join(pkgdest, pkg)
         bb.utils.mkdirhier(root)
 
@@ -1248,7 +1254,7 @@ python populate_packages () {
 
     # Handle LICENSE_EXCLUSION
     package_list = []
-    for pkg in packages.split():
+    for pkg in packages:
         if d.getVar('LICENSE_EXCLUSION-' + pkg):
             msg = "%s has an incompatible license. Excluding from packaging." % pkg
             package_qa_handle_error("incompatible-license", msg, d)

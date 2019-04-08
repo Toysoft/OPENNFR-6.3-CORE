@@ -34,6 +34,7 @@ BBLAYERS ?= \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-azbox \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-ax \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-blackbox \
+	$(CURDIR)/meta-oe-alliance/meta-brands/meta-beyonwiz \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-ceryon \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-clap \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-cube \
@@ -851,6 +852,9 @@ MACHINEBUILD=gbquad4k
 else ifeq ($(MACHINEBUILD),gbue4k)
 MACHINE=gb7252
 MACHINEBUILD=gbue4k
+else ifeq ($(MACHINEBUILD),gbtrio4k)
+MACHINE=gbmv200
+MACHINEBUILD=gbtrio4k
 
 else ifeq ($(MACHINEBUILD),xpeedlxcs2)
 MACHINE=ultramini
@@ -910,9 +914,21 @@ MACHINEBUILD=dinobot4kpro
 else ifeq ($(MACHINEBUILD),dinobotu55)
 MACHINE=u55
 MACHINEBUILD=dinobotu55
+else ifeq ($(MACHINEBUILD),iziboxone4k)
+MACHINE=u55
+MACHINEBUILD=iziboxone4k
+else ifeq ($(MACHINEBUILD),hitube4k)
+MACHINE=u55
+MACHINEBUILD=hitube4k
+else ifeq ($(MACHINEBUILD),axashisc4k)
+MACHINE=u56
+MACHINEBUILD=axashisc4k
 else ifeq ($(MACHINEBUILD),dinoboth265)
 MACHINE=u41
 MACHINEBUILD=dinoboth265
+else ifeq ($(MACHINEBUILD),axashistwin)
+MACHINE=u41
+MACHINEBUILD=axashistwin
 
 else ifeq ($(MACHINEBUILD),clap4k)
 MACHINE=cc1
