@@ -3,7 +3,11 @@ From: Richard Purdie <richard.purdie@linuxfoundation.org>
 Date: Thu, 4 Apr 2019 14:20:31 +0100
 Subject: [PATCH 2/3] use process groups when spawning
 
+Rather than just killing the process we've swawned, set the process group
+for spawned children and then kill the group of processes.
+
 Signed-off-by: Richard Purdie <richard.purdie@linuxfoundation.org>
+Upstream-Status: Pending [code being tested]
 ---
  utils.c | 9 +++++----
  1 file changed, 5 insertions(+), 4 deletions(-)
