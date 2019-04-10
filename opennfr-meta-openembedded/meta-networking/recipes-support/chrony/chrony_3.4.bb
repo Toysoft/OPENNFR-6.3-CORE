@@ -35,6 +35,11 @@ SRC_URI = "https://download.tuxfamily.org/chrony/chrony-${PV}.tar.gz \
     file://chronyd \
     file://arm_eabi.patch \
 "
+
+SRC_URI_append_libc-musl = " \
+    file://0001-Fix-compilation-with-musl.patch \
+"
+
 SRC_URI[md5sum] = "7170e750469c198fc6784047d6f71144"
 SRC_URI[sha256sum] = "af77e47c2610a7e55c8af5b89a8aeff52d9a867dd5983d848b52d374bc0e6b9f"
 

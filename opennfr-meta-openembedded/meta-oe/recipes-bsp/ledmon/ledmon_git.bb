@@ -9,14 +9,16 @@ LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=0636e73ff0215e8d672dc4c32c317bb3 \
 "
 
-DEPENDS = " systemd sg3-utils"
+DEPENDS = "sg3-utils udev"
 
 inherit systemd
 
 SYSTEMD_SERVICE_${PN} = "ledmon.service"
 
 SRC_URI = "git://github.com/intel/ledmon;branch=master \
-"
+           file://0001-use-atexit-insead-of-on_exit-for-musl-compatibility.patch \
+           file://0002-include-sys-select.h-and-sys-types.h.patch \
+          "
 
 SRCREV = "ad1304ca1363d727425a1f23703c523e21feae4f"
 
