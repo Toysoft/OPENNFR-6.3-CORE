@@ -37,6 +37,9 @@ DEPENDS_append_class-nativesdk = " gobject-introspection-native"
 # This is used by introspection tools to find .gir includes
 export XDG_DATA_DIRS = "${STAGING_DATADIR}:${STAGING_LIBDIR}"
 
+# Disable writing to $HOME/.cache/g-ir-scanner
+export GI_SCANNER_DISABLE_CACHE = "1"
+
 do_configure_prepend_class-target () {
     # introspection.m4 pre-packaged with upstream tarballs does not yet
     # have our fixes
