@@ -8,12 +8,12 @@ RDEPENDS_${PN} = "libsdl"
 
 COMPATIBLE_MACHINE = "^(sf8008)$"
 
-SRCDATE = "20190402"
+SRCDATE = "20190410"
 
 PV = "${SRCDATE}"
 PR = "r0"
 
-SRC_URI = "http://source.mynonpublic.com/octagon/${MACHINE}-libreader-${SRCDATE}.tar.gz"
+SRC_URI = "http://source.mynonpublic.com/octagon/${MACHINE}-libreader-${SRCDATE}.zip"
 
 S = "${WORKDIR}"
 
@@ -27,5 +27,5 @@ do_package_qa() {
 
 FILES_${PN}  = "${bindir}/libreader"
 
-SRC_URI[md5sum] = "5af4077161ac107f5dc42c7661021b6e"
-SRC_URI[sha256sum] = "ba51292674337904c2d97b1b098791d874461a3ba57656361e3f5e4b95ce0926"
+SRC_URI[md5sum] = "3d5c6d2c4cc24687a46ab6767cdd3c8f"
+SRC_URI[sha256sum] = "a9cadd7d36bb88de73a3d660f9f930ad327bc7cf7898fdc30a16899a69d3efad"

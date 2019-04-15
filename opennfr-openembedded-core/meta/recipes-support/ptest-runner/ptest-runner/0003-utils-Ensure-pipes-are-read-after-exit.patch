@@ -3,7 +3,13 @@ From: Richard Purdie <richard.purdie@linuxfoundation.org>
 Date: Thu, 4 Apr 2019 14:24:14 +0100
 Subject: [PATCH 3/3] utils: Ensure pipes are read after exit
 
+There was a race in the code where the pipes may not be read after the process has exited
+and data may be left behind in them. This change to ordering ensures the pipes are read
+after the exit code has been read meaning no data can be left behind and the logs should
+be complete.
+
 Signed-off-by: Richard Purdie <richard.purdie@linuxfoundation.org>
+Upstream-Status: Pending [code being tested]
 ---
  utils.c | 29 ++++++++++++++++-------------
  1 file changed, 16 insertions(+), 13 deletions(-)
