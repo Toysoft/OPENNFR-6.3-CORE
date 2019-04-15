@@ -68,7 +68,12 @@ EXTRA_OECONF_class-target = "\
 
 EXTRA_OECONF_class-native = "\
     --prefix=${prefix} \
+    --includedir=${includedir}/${BPN} \
+    --sysconfdir=${sysconfdir}/${BPN} \
     --datadir=${datadir}/${BPN} \
+    --libdir=${libdir} \
+    --libexecdir=${libdir}/${BPN}/modules \
+    --localstatedir=${localstatedir} \
     "
 
 do_configure_prepend() {
@@ -106,6 +111,20 @@ do_install_append_class-target() {
 
     sed -i 's/^ServerRoot/#ServerRoot/' ${D}/${sysconfdir}/${BPN}/httpd.conf
 
+    sed -i -e 's,${STAGING_DIR_TARGET},,g' \
+           -e 's,${DEBUG_PREFIX_MAP},,g' \
+           -e 's,-fdebug-prefix-map[^ ]*,,g; s,-fmacro-prefix-map[^ ]*,,g' \
+           -e 's,${HOSTTOOLS_DIR}/,,g' \
+           -e 's,APU_INCLUDEDIR = .*,APU_INCLUDEDIR = ,g' \
+           -e 's,APU_CONFIG = .*,APU_CONFIG = ,g' ${D}${datadir}/apache2/build/config_vars.mk
+
+    sed -i -e 's,--sysroot=${STAGING_DIR_TARGET},,g' \
+           -e 's,${DEBUG_PREFIX_MAP},,g' \
+           -e 's,${RECIPE_SYSROOT},,g' \
+           -e 's,-fdebug-prefix-map[^ ]*,,g; s,-fmacro-prefix-map[^ ]*,,g' \
+           -e 's,APU_INCLUDEDIR = .*,APU_INCLUDEDIR = ,g' \
+           -e 's,".*/configure","configure",g' ${D}${datadir}/apache2/build/config.nice
+
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -d ${D}${sysconfdir}/tmpfiles.d/
         install -m 0644 ${WORKDIR}/apache2-volatile.conf ${D}${sysconfdir}/tmpfiles.d/
@@ -119,14 +138,32 @@ do_install_append_class-target() {
         install -m 0644 ${WORKDIR}/volatiles.04_apache2 ${D}${sysconfdir}/default/volatiles/04_apache2
     fi
 
-    rm -rf ${D}${datadir}/${BPN}/build
     rm -rf ${D}${localstatedir}
     chown -R root:root ${D}
 }
 
-do_install_class-native() {
+do_install_append_class-native() {
     install -d ${D}${bindir} ${D}${libdir}
     install -m 755 server/gen_test_char ${D}${bindir}
+}
+
+SYSROOT_PREPROCESS_FUNCS_append_class-target = "apache_sysroot_preprocess"
+
+apache_sysroot_preprocess() {
+    install -d ${SYSROOT_DESTDIR}${bindir_crossscripts}
+    install -m 755 ${D}${bindir}/apxs ${SYSROOT_DESTDIR}${bindir_crossscripts}
+    install -d ${SYSROOT_DESTDIR}${sbindir}
+    install -m 755 ${D}${sbindir}/apachectl ${SYSROOT_DESTDIR}${sbindir}
+    sed -i 's!my $installbuilddir = .*!my $installbuilddir = "${STAGING_DIR_HOST}/${datadir}/${BPN}/build";!' ${SYSROOT_DESTDIR}${bindir_crossscripts}/apxs
+    sed -i 's!my $libtool = .*!my $libtool = "${STAGING_BINDIR_CROSS}/${HOST_SYS}-libtool";!' ${SYSROOT_DESTDIR}${bindir_crossscripts}/apxs
+
+    sed -i 's!^APR_CONFIG = .*!APR_CONFIG = ${STAGING_BINDIR_CROSS}/apr-1-config!' ${SYSROOT_DESTDIR}${datadir}/${BPN}/build/config_vars.mk
+    sed -i 's!^APU_CONFIG = .*!APU_CONFIG = ${STAGING_BINDIR_CROSS}/apu-1-config!' ${SYSROOT_DESTDIR}${datadir}/${BPN}/build/config_vars.mk
+    sed -i 's!^includedir = .*!includedir = ${STAGING_INCDIR}/apache2!' ${SYSROOT_DESTDIR}${datadir}/${BPN}/build/config_vars.mk
+    sed -i 's!^CFLAGS = -I[^ ]*!CFLAGS = -I${STAGING_INCDIR}/openssl!' ${SYSROOT_DESTDIR}${datadir}/${BPN}/build/config_vars.mk
+    sed -i 's!^EXTRA_LDFLAGS = .*!EXTRA_LDFLAGS = -L${STAGING_LIBDIR}!' ${SYSROOT_DESTDIR}${datadir}/${BPN}/build/config_vars.mk
+    sed -i 's!^EXTRA_INCLUDES = .*!EXTRA_INCLUDES = -I$(includedir) -I. -I${STAGING_INCDIR}!' ${SYSROOT_DESTDIR}${datadir}/${BPN}/build/config_vars.mk
+    sed -i 's!--sysroot=[^ ]*!--sysroot=${STAGING_DIR_HOST}!' ${SYSROOT_DESTDIR}${datadir}/${BPN}/build/config_vars.mk
 }
 
 # Implications - used by update-rc.d scripts
