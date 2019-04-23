@@ -23,8 +23,6 @@ RRECOMMENDS_${PN} = "\
 	enigma2-skins \
 	enigma2-pliplugins \
     	enigma2-plugin-extensions-epgimport \
-	enigma2-plugin-softcams-oscam-smod-ipv4only  \
-	enigma2-plugin-softcams-oscam-smod  \
 	librtmp \
 "
 
