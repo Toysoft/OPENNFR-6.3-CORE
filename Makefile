@@ -31,6 +31,7 @@ BBLAYERS ?= \
 	$(CURDIR)/meta-oe-alliance/meta-oe \
 	$(CURDIR)/meta-qt5 \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-airdigital \
+	$(CURDIR)/meta-oe-alliance/meta-brands/meta-amiko \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-azbox \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-ax \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-blackbox \
@@ -887,6 +888,9 @@ MACHINEBUILD=axashis4kcombo
 else ifeq ($(MACHINEBUILD),dinobot4kl)
 MACHINE=u51
 MACHINEBUILD=dinobot4kl
+else ifeq ($(MACHINEBUILD),protek4kx1)
+MACHINE=u51
+MACHINEBUILD=protek4kx1
 else ifeq ($(MACHINEBUILD),dinobot4k)
 MACHINE=u5
 MACHINEBUILD=dinobot4k

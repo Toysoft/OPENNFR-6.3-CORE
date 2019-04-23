@@ -15,7 +15,7 @@ Fixes: 61d6c3834de3 ("xtables: add 'printf' attribute to xlate_add")
 Signed-off-by: Adam Gołębiowski <adamg@pld-linux.org>
 Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
 
-Upstream-Status: Backporting
+Upstream-Status: Backport
 ---
  extensions/libip6t_icmp6.c | 4 ++--
  extensions/libipt_icmp.c   | 2 +-
