@@ -20,9 +20,7 @@ inherit cmake distutils3-base
 
 DEPENDS += "json-c"
 
-EXTRA_OECMAKE_append = " -DINSTALLTOOLS:BOOL=ON -DFIRMATA=ON -DCMAKE_SKIP_RPATH=ON \
-                         -DPYTHON3_PACKAGES_PATH:PATH=${baselib}/python${PYTHON_BASEVERSION}/site-packages \
-                       "
+EXTRA_OECMAKE_append = " -DINSTALLTOOLS:BOOL=ON -DFIRMATA=ON -DCMAKE_SKIP_RPATH=ON"
 
 # Prepend mraa-utils to make sure bindir ends up in there
 PACKAGES =+ "${PN}-utils"

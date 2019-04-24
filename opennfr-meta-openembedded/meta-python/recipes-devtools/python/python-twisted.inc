@@ -35,6 +35,7 @@ PACKAGES += "\
 "
 
 PACKAGES =+ "\
+    ${PN}-src \
     ${PN}-bin \
 "
 
@@ -241,10 +242,9 @@ FILES_${PN}-doc += " \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/python/_pydoctortemplates/ \
 "
 
-RDEPENDS_${PN}-src = "${PN}"
+RDEPENDS_{PN}-src = "${PN}"
 FILES_${PN}-src = " \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/*.py \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/*/*.py \
     ${libdir}/${PYTHON_DIR}/site-packages/twisted/*/*/*.py \
 "
-

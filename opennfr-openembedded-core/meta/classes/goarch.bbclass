@@ -42,10 +42,6 @@ TUNE_CCARGS_remove = "-march=mips32r2"
 SECURITY_CFLAGS_mipsarch = "${SECURITY_NOPIE_CFLAGS}"
 SECURITY_NOPIE_CFLAGS ??= ""
 
-# go can't be built with ccache:
-# gcc: fatal error: no input files
-CCACHE_DISABLE ?= "1"
-
 def go_map_arch(a, d):
     import re
     if re.match('i.86', a):

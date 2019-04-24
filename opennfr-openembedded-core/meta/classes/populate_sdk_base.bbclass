@@ -6,7 +6,6 @@ COMPLEMENTARY_GLOB[dev-pkgs] = '*-dev'
 COMPLEMENTARY_GLOB[staticdev-pkgs] = '*-staticdev'
 COMPLEMENTARY_GLOB[doc-pkgs] = '*-doc'
 COMPLEMENTARY_GLOB[dbg-pkgs] = '*-dbg'
-COMPLEMENTARY_GLOB[src-pkgs] = '*-src'
 COMPLEMENTARY_GLOB[ptest-pkgs] = '*-ptest'
 
 def complementary_globs(featurevar, d):
@@ -18,7 +17,7 @@ def complementary_globs(featurevar, d):
             globs.append(glob)
     return ' '.join(globs)
 
-SDKIMAGE_FEATURES ??= "dev-pkgs dbg-pkgs src-pkgs ${@bb.utils.contains('DISTRO_FEATURES', 'api-documentation', 'doc-pkgs', '', d)}"
+SDKIMAGE_FEATURES ??= "dev-pkgs dbg-pkgs ${@bb.utils.contains('DISTRO_FEATURES', 'api-documentation', 'doc-pkgs', '', d)}"
 SDKIMAGE_INSTALL_COMPLEMENTARY = '${@complementary_globs("SDKIMAGE_FEATURES", d)}'
 
 PACKAGE_ARCHS_append_task-populate-sdk = " sdk-provides-dummy-target"
@@ -258,7 +257,7 @@ EOF
 		-e 's#@SDKEXTPATH@#${SDKEXTPATH}#g' \
 		-e 's#@OLDEST_KERNEL@#${SDK_OLDEST_KERNEL}#g' \
 		-e 's#@REAL_MULTIMACH_TARGET_SYS@#${REAL_MULTIMACH_TARGET_SYS}#g' \
-		-e 's#@SDK_TITLE@#${@d.getVar("SDK_TITLE").replace('&', '\\&')}#g' \
+		-e 's#@SDK_TITLE@#${@d.getVar("SDK_TITLE").replace('&', '\&')}#g' \
 		-e 's#@SDK_VERSION@#${SDK_VERSION}#g' \
 		-e '/@SDK_PRE_INSTALL_COMMAND@/d' \
 		-e '/@SDK_POST_INSTALL_COMMAND@/d' \

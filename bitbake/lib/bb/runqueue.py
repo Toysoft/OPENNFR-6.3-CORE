@@ -41,7 +41,7 @@ from multiprocessing import Process
 bblogger = logging.getLogger("BitBake")
 logger = logging.getLogger("BitBake.RunQueue")
 
-__find_sha256__ = re.compile( r'(?i)(?<![a-z0-9])[a-f0-9]{64}(?![a-z0-9])' )
+__find_md5__ = re.compile( r'(?i)(?<![a-z0-9])[a-f0-9]{32}(?![a-z0-9])' )
 
 def fn_from_tid(tid):
      return tid.rsplit(":", 1)[0]
@@ -346,7 +346,6 @@ class RunTaskEntry(object):
         self.depends = set()
         self.revdeps = set()
         self.hash = None
-        self.unihash = None
         self.task = None
         self.weight = 1
 
@@ -385,9 +384,6 @@ class RunQueueData:
 
     def get_task_hash(self, tid):
         return self.runtaskentries[tid].hash
-
-    def get_task_unihash(self, tid):
-        return self.runtaskentries[tid].unihash
 
     def get_user_idstring(self, tid, task_name_suffix = ""):
         return tid + task_name_suffix
@@ -1154,20 +1150,17 @@ class RunQueueData:
                 if len(self.runtaskentries[tid].depends - dealtwith) == 0:
                     dealtwith.add(tid)
                     todeal.remove(tid)
-                    self.prepare_task_hash(tid)
+                    procdep = []
+                    for dep in self.runtaskentries[tid].depends:
+                        procdep.append(fn_from_tid(dep) + "." + taskname_from_tid(dep))
+                    (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
+                    self.runtaskentries[tid].hash = bb.parse.siggen.get_taskhash(taskfn, taskname, procdep, self.dataCaches[mc])
+                    task = self.runtaskentries[tid].task
 
         bb.parse.siggen.writeout_file_checksum_cache()
 
         #self.dump_data()
         return len(self.runtaskentries)
-
-    def prepare_task_hash(self, tid):
-        procdep = []
-        for dep in self.runtaskentries[tid].depends:
-            procdep.append(fn_from_tid(dep) + "." + taskname_from_tid(dep))
-        (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
-        self.runtaskentries[tid].hash = bb.parse.siggen.get_taskhash(taskfn, taskname, procdep, self.dataCaches[mc])
-        self.runtaskentries[tid].unihash = bb.parse.siggen.get_unihash(taskfn + "." + taskname)
 
     def dump_data(self):
         """
@@ -1231,12 +1224,17 @@ class RunQueue:
         bb.utils.nonblockingfd(worker.stdout)
         workerpipe = runQueuePipe(worker.stdout, None, self.cfgData, self, rqexec)
 
+        runqhash = {}
+        for tid in self.rqdata.runtaskentries:
+            runqhash[tid] = self.rqdata.runtaskentries[tid].hash
+
         workerdata = {
             "taskdeps" : self.rqdata.dataCaches[mc].task_deps,
             "fakerootenv" : self.rqdata.dataCaches[mc].fakerootenv,
             "fakerootdirs" : self.rqdata.dataCaches[mc].fakerootdirs,
             "fakerootnoenv" : self.rqdata.dataCaches[mc].fakerootnoenv,
             "sigdata" : bb.parse.siggen.get_taskdata(),
+            "runq_hash" : runqhash,
             "logdefaultdebug" : bb.msg.loggerDefaultDebugLevel,
             "logdefaultverbose" : bb.msg.loggerDefaultVerbose,
             "logdefaultverboselogs" : bb.msg.loggerVerboseLogs,
@@ -1378,26 +1376,6 @@ class RunQueue:
             cache[tid] = iscurrent
         return iscurrent
 
-    def validate_hash(self, *, sq_fn, sq_task, sq_hash, sq_hashfn, siginfo, sq_unihash, d):
-        locs = {"sq_fn" : sq_fn, "sq_task" : sq_task, "sq_hash" : sq_hash, "sq_hashfn" : sq_hashfn,
-                "sq_unihash" : sq_unihash, "siginfo" : siginfo, "d" : d}
-
-        hashvalidate_args = ("(sq_fn, sq_task, sq_hash, sq_hashfn, d, siginfo=siginfo, sq_unihash=sq_unihash)",
-                             "(sq_fn, sq_task, sq_hash, sq_hashfn, d, siginfo=siginfo)",
-                             "(sq_fn, sq_task, sq_hash, sq_hashfn, d)")
-
-        for args in hashvalidate_args[:-1]:
-            try:
-                call = self.hashvalidate + args
-                return bb.utils.better_eval(call, locs)
-            except TypeError:
-                continue
-
-        # Call the last entry without a try...catch to propagate any thrown
-        # TypeError
-        call = self.hashvalidate + hashvalidate_args[-1]
-        return bb.utils.better_eval(call, locs)
-
     def _execute_runqueue(self):
         """
         Run the tasks in a queue prepared by rqdata.prepare()
@@ -1431,12 +1409,6 @@ class RunQueue:
                 bb.event.fire(bb.event.DepTreeGenerated(depgraph), self.cooker.data)
 
         if self.state is runQueueSceneInit:
-            if not self.dm_event_handler_registered:
-                 res = bb.event.register(self.dm_event_handler_name,
-                                         lambda x: self.dm.check(self) if self.state in [runQueueSceneRun, runQueueRunning, runQueueCleanUp] else False,
-                                         ('bb.event.HeartbeatEvent',))
-                 self.dm_event_handler_registered = True
-
             dump = self.cooker.configuration.dump_signatures
             if dump:
                 self.rqdata.init_progress_reporter.finish()
@@ -1453,6 +1425,11 @@ class RunQueue:
                 self.rqexe = RunQueueExecuteScenequeue(self)
 
         if self.state is runQueueSceneRun:
+            if not self.dm_event_handler_registered:
+                 res = bb.event.register(self.dm_event_handler_name,
+                                         lambda x: self.dm.check(self) if self.state in [runQueueSceneRun, runQueueRunning, runQueueCleanUp] else False,
+                                         ('bb.event.HeartbeatEvent',))
+                 self.dm_event_handler_registered = True
             retval = self.rqexe.execute()
 
         if self.state is runQueueRunInit:
@@ -1569,7 +1546,6 @@ class RunQueue:
         valid = []
         sq_hash = []
         sq_hashfn = []
-        sq_unihash = []
         sq_fn = []
         sq_taskname = []
         sq_task = []
@@ -1588,13 +1564,16 @@ class RunQueue:
             sq_fn.append(fn)
             sq_hashfn.append(self.rqdata.dataCaches[mc].hashfn[taskfn])
             sq_hash.append(self.rqdata.runtaskentries[tid].hash)
-            sq_unihash.append(self.rqdata.runtaskentries[tid].unihash)
             sq_taskname.append(taskname)
             sq_task.append(tid)
-
-        valid = self.validate_hash(sq_fn=sq_fn, sq_task=sq_taskname, sq_hash=sq_hash, sq_hashfn=sq_hashfn,
-                siginfo=True, sq_unihash=sq_unihash, d=self.cooker.data)
-
+        locs = { "sq_fn" : sq_fn, "sq_task" : sq_taskname, "sq_hash" : sq_hash, "sq_hashfn" : sq_hashfn, "d" : self.cooker.data }
+        try:
+            call = self.hashvalidate + "(sq_fn, sq_task, sq_hash, sq_hashfn, d, siginfo=True)"
+            valid = bb.utils.better_eval(call, locs)
+        # Handle version with no siginfo parameter
+        except TypeError:
+            call = self.hashvalidate + "(sq_fn, sq_task, sq_hash, sq_hashfn, d)"
+            valid = bb.utils.better_eval(call, locs)
         for v in valid:
             valid_new.add(sq_task[v])
 
@@ -1676,7 +1655,7 @@ class RunQueue:
             matches = {k : v for k, v in iter(matches.items()) if h not in k}
             if matches:
                 latestmatch = sorted(matches.keys(), key=lambda f: matches[f])[-1]
-                prevh = __find_sha256__.search(latestmatch).group(0)
+                prevh = __find_md5__.search(latestmatch).group(0)
                 output = bb.siggen.compare_sigfiles(latestmatch, match, recursecb)
                 bb.plain("\nTask %s:%s couldn't be used from the cache because:\n  We need hash %s, closest matching task was %s\n  " % (pn, taskname, h, prevh) + '\n  '.join(output))
 
@@ -2051,8 +2030,6 @@ class RunQueueExecuteTasks(RunQueueExecute):
             taskdepdata = self.build_taskdepdata(task)
 
             taskdep = self.rqdata.dataCaches[mc].task_deps[taskfn]
-            taskhash = self.rqdata.get_task_hash(task)
-            unihash = self.rqdata.get_task_unihash(task)
             if 'fakeroot' in taskdep and taskname in taskdep['fakeroot'] and not (self.cooker.configuration.dry_run or self.rqdata.setscene_enforce):
                 if not mc in self.rq.fakeworker:
                     try:
@@ -2062,10 +2039,10 @@ class RunQueueExecuteTasks(RunQueueExecute):
                         self.rq.state = runQueueFailed
                         self.stats.taskFailed()
                         return True
-                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, False, self.cooker.collection.get_file_appends(taskfn), taskdepdata, self.rqdata.setscene_enforce)) + b"</runtask>")
+                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, False, self.cooker.collection.get_file_appends(taskfn), taskdepdata, self.rqdata.setscene_enforce)) + b"</runtask>")
                 self.rq.fakeworker[mc].process.stdin.flush()
             else:
-                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, False, self.cooker.collection.get_file_appends(taskfn), taskdepdata, self.rqdata.setscene_enforce)) + b"</runtask>")
+                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, False, self.cooker.collection.get_file_appends(taskfn), taskdepdata, self.rqdata.setscene_enforce)) + b"</runtask>")
                 self.rq.worker[mc].process.stdin.flush()
 
             self.build_stamps[task] = bb.build.stampfile(taskname, self.rqdata.dataCaches[mc], taskfn, noextra=True)
@@ -2107,8 +2084,7 @@ class RunQueueExecuteTasks(RunQueueExecute):
                 deps = self.rqdata.runtaskentries[revdep].depends
                 provides = self.rqdata.dataCaches[mc].fn_provides[taskfn]
                 taskhash = self.rqdata.runtaskentries[revdep].hash
-                unihash = self.rqdata.runtaskentries[revdep].unihash
-                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash, unihash]
+                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash]
                 for revdep2 in deps:
                     if revdep2 not in taskdepdata:
                         additional.append(revdep2)
@@ -2311,7 +2287,6 @@ class RunQueueExecuteScenequeue(RunQueueExecute):
         if self.rq.hashvalidate:
             sq_hash = []
             sq_hashfn = []
-            sq_unihash = []
             sq_fn = []
             sq_taskname = []
             sq_task = []
@@ -2343,14 +2318,14 @@ class RunQueueExecuteScenequeue(RunQueueExecute):
                 sq_fn.append(fn)
                 sq_hashfn.append(self.rqdata.dataCaches[mc].hashfn[taskfn])
                 sq_hash.append(self.rqdata.runtaskentries[tid].hash)
-                sq_unihash.append(self.rqdata.runtaskentries[tid].unihash)
                 sq_taskname.append(taskname)
                 sq_task.append(tid)
 
             self.cooker.data.setVar("BB_SETSCENE_STAMPCURRENT_COUNT", len(stamppresent))
 
-            valid = self.rq.validate_hash(sq_fn=sq_fn, sq_task=sq_taskname, sq_hash=sq_hash, sq_hashfn=sq_hashfn,
-                    siginfo=False, sq_unihash=sq_unihash, d=self.cooker.data)
+            call = self.rq.hashvalidate + "(sq_fn, sq_task, sq_hash, sq_hashfn, d)"
+            locs = { "sq_fn" : sq_fn, "sq_task" : sq_taskname, "sq_hash" : sq_hash, "sq_hashfn" : sq_hashfn, "d" : self.cooker.data }
+            valid = bb.utils.better_eval(call, locs)
 
             self.cooker.data.delVar("BB_SETSCENE_STAMPCURRENT_COUNT")
 
@@ -2481,15 +2456,13 @@ class RunQueueExecuteScenequeue(RunQueueExecute):
             taskdepdata = self.build_taskdepdata(task)
 
             taskdep = self.rqdata.dataCaches[mc].task_deps[taskfn]
-            taskhash = self.rqdata.get_task_hash(task)
-            unihash = self.rqdata.get_task_unihash(task)
             if 'fakeroot' in taskdep and taskname in taskdep['fakeroot'] and not self.cooker.configuration.dry_run:
                 if not mc in self.rq.fakeworker:
                     self.rq.start_fakeworker(self, mc)
-                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, True, self.cooker.collection.get_file_appends(taskfn), taskdepdata, False)) + b"</runtask>")
+                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, True, self.cooker.collection.get_file_appends(taskfn), taskdepdata, False)) + b"</runtask>")
                 self.rq.fakeworker[mc].process.stdin.flush()
             else:
-                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, True, self.cooker.collection.get_file_appends(taskfn), taskdepdata, False)) + b"</runtask>")
+                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, True, self.cooker.collection.get_file_appends(taskfn), taskdepdata, False)) + b"</runtask>")
                 self.rq.worker[mc].process.stdin.flush()
 
             self.build_stamps[task] = bb.build.stampfile(taskname, self.rqdata.dataCaches[mc], taskfn, noextra=True)
@@ -2553,8 +2526,7 @@ class RunQueueExecuteScenequeue(RunQueueExecute):
                 deps = getsetscenedeps(revdep)
                 provides = self.rqdata.dataCaches[mc].fn_provides[taskfn]
                 taskhash = self.rqdata.runtaskentries[revdep].hash
-                unihash = self.rqdata.runtaskentries[revdep].unihash
-                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash, unihash]
+                taskdepdata[revdep] = [pn, taskname, fn, deps, provides, taskhash]
                 for revdep2 in deps:
                     if revdep2 not in taskdepdata:
                         additional.append(revdep2)

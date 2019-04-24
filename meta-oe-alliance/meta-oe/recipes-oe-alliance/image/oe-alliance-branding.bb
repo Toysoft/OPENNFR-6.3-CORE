@@ -75,6 +75,16 @@ do_configure_prepend() {
         DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-VUPLUS-BASE}/recipes-drivers/vuplus-dvb-proxy-${MACHINE}.bb | cut -b 12-19`
     elif [ "${BRAND_OEM}" = "vuplus" ]; then
         DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-VUPLUS-BASE}/recipes-drivers/vuplus-dvb-modules-${MACHINE}.bb | cut -b 12-19`
+    elif [ "${BRAND_OEM}" = "amiko" ]; then
+        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-AMIKO-BASE}/recipes-drivers/amiko-dvb-modules-${MACHINE}.bb | cut -b 12-19`
+    elif [ "${BRAND_OEM}" = "beyonwiz" ]; then
+        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-BEYONWIZ-BASE}/recipes-drivers/beyonwiz-dvb-modules-${MACHINE}.bb | cut -b 12-19`
+    elif [ "${BRAND_OEM}" = "clap" ]; then
+        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-CLAP-BASE}/recipes-drivers/clap-dvb-modules-${MACHINE}.bb | cut -b 12-19`
+    elif [ "${BRAND_OEM}" = "fulan" ]; then
+        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-FULAN-BASE}/recipes-drivers/fulan-dvb-modules-${MACHINE}.bb | cut -b 12-19`
+    elif [ "${BRAND_OEM}" = "LinkDroid" ]; then
+        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-LINKDROID-BASE}/recipes-drivers/linkdroid-stb-${MACHINE}.bb | cut -b 12-19`
     elif [ "${BRAND_OEM}" = "xtrend" ]; then
         DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-XTREND-BASE}/recipes-drivers/et-dvb-modules-${MACHINE}.bb | cut -b 12-19`
     elif [ "${BRAND_OEM}" = "entwopia" ]; then
@@ -139,7 +149,7 @@ do_configure_prepend() {
         DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-PROTEK-BASE}/recipes-drivers/protek-dvb-modules-${MACHINE}.bb | cut -b 12-19`
     elif [ "${BRAND_OEM}" = "edision" ]; then
         DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-EDISION-BASE}/recipes-drivers/edision-dvb-modules-${MACHINE}.bb | cut -b 12-19`
-   elif [ "${BRAND_OEM}" = "maxytec" ]; then
+    elif [ "${BRAND_OEM}" = "maxytec" ]; then
         DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-MAXYTEC-BASE}/recipes-drivers/maxytec-dvb-modules-${MACHINE}.bb | cut -b 12-19`
     elif [ "${BRAND_OEM}" = "dreambox" ]; then
         if [ "${MACHINE}" = "dm7080" ]; then
@@ -152,25 +162,19 @@ do_configure_prepend() {
             DRIVERSDATE="20131228"
         elif [ "${MACHINE}" = "dm8000" ]; then
             DRIVERSDATE="20140604"
-        elif [ "${MACHINE}" = "dm7020hd" -o "${MACHINE}" = "dm7020hdv2" ]; then
+        elif [ "${MACHINE}" = "dm7020hd" ] || [ "${MACHINE}" = "dm7020hdv2" ]; then
             DRIVERSDATE="20161019"
         elif [ "${MACHINE}" = "dm800se" ]; then
             DRIVERSDATE="20151201"
         elif [ "${MACHINE}" = "dm800sev2" ]; then
             DRIVERSDATE="20151201"
         elif [ "${MACHINE}" = "dm900" ]; then
-            DRIVERSDATE="20181127"
+            DRIVERSDATE="20190312"
         elif [ "${MACHINE}" = "dm920" ]; then
-            DRIVERSDATE="20181127"
+            DRIVERSDATE="20190312"
         else
             DRIVERSDATE="20150618"
         fi
-    elif [ "${BRAND_OEM}" = "fulan" ]; then
-        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-FULAN-BASE}/recipes-drivers/fulan-dvb-modules-${MACHINE}.bb | cut -b 12-19`
-    elif [ "${BRAND_OEM}" = "LinkDroid" ]; then
-        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-LINKDROID-BASE}/recipes-drivers/linkdroid-stb-${MACHINE}.bb | cut -b 12-19`
-    elif [ "${BRAND_OEM}" = "clap" ]; then
-        DRIVERSDATE=`grep "SRCDATE = " ${OEA-META-CLAP-BASE}/recipes-drivers/clap-dvb-modules-${MACHINE}.bb | cut -b 12-19`
     else
         DRIVERSDATE='N/A'
     fi

@@ -29,7 +29,7 @@ def opkg_query(cmd_output):
     a dictionary with the information of the packages. This is used
     when the packages are in deb or ipk format.
     """
-    verregex = re.compile(r' \([=<>]* [^ )]*\)')
+    verregex = re.compile(' \([=<>]* [^ )]*\)')
     output = dict()
     pkg = ""
     arch = ""
@@ -252,8 +252,8 @@ class DpkgIndexer(Indexer):
             with open(os.path.join(self.d.expand("${STAGING_ETCDIR_NATIVE}"),
                 "apt", "apt.conf.sample")) as apt_conf_sample:
                 for line in apt_conf_sample.read().split("\n"):
-                    line = re.sub(r"#ROOTFS#", "/dev/null", line)
-                    line = re.sub(r"#APTCONF#", self.apt_conf_dir, line)
+                    line = re.sub("#ROOTFS#", "/dev/null", line)
+                    line = re.sub("#APTCONF#", self.apt_conf_dir, line)
                     apt_conf.write(line + "\n")
 
     def write_index(self):
@@ -408,7 +408,7 @@ class PackageManager(object, metaclass=ABCMeta):
         with open(postinst_intercept_hook) as intercept:
             registered_pkgs = None
             for line in intercept.read().split("\n"):
-                m = re.match(r"^##PKGS:(.*)", line)
+                m = re.match("^##PKGS:(.*)", line)
                 if m is not None:
                     registered_pkgs = m.group(1).strip()
                     break
@@ -439,11 +439,6 @@ class PackageManager(object, metaclass=ABCMeta):
                 self._postpone_to_first_boot(script_full)
                 continue
 
-            if populate_sdk == 'host' and self.d.getVar('SDK_OS') == 'mingw32':
-                bb.warn("The postinstall intercept hook '%s' could not be executed due to missing wine support, details in %s/log.do_%s"
-                                % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
-                continue
-
             bb.note("> Executing %s intercept ..." % script)
 
             try:
@@ -452,7 +447,7 @@ class PackageManager(object, metaclass=ABCMeta):
             except subprocess.CalledProcessError as e:
                 bb.note("Exit code %d. Output:\n%s" % (e.returncode, e.output.decode("utf-8")))
                 if populate_sdk == 'host':
-                    bb.fatal("The postinstall intercept hook '%s' failed, details in %s/log.do_%s" % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
+                    bb.warn("The postinstall intercept hook '%s' failed, details in %s/log.do_%s" % (script, self.d.getVar('T'), self.d.getVar('BB_CURRENTTASK')))
                 elif populate_sdk == 'target':
                     if "qemuwrapper: qemu usermode is not supported" in e.output.decode("utf-8"):
                         bb.warn("The postinstall intercept hook '%s' could not be executed due to missing qemu usermode support, details in %s/log.do_%s"
@@ -971,7 +966,7 @@ class RpmPM(PackageManager):
         os.environ['RPM_ETCCONFIGDIR'] = self.target_rootfs
 
         dnf_cmd = bb.utils.which(os.getenv('PATH'), "dnf")
-        standard_dnf_args = ["-v", "--rpmverbosity=info", "-y",
+        standard_dnf_args = ["-v", "--rpmverbosity=debug", "-y",
                              "-c", oe.path.join(self.target_rootfs, "etc/dnf/dnf.conf"),
                              "--setopt=reposdir=%s" %(oe.path.join(self.target_rootfs, "etc/yum.repos.d")),
                              "--installroot=%s" % (self.target_rootfs),
@@ -1118,7 +1113,10 @@ class OpkgDpkgPM(PackageManager):
         tmp_dir = tempfile.mkdtemp()
         current_dir = os.getcwd()
         os.chdir(tmp_dir)
-        data_tar = 'data.tar.xz'
+        if self.d.getVar('IMAGE_PKGTYPE') == 'deb':
+            data_tar = 'data.tar.xz'
+        else:
+            data_tar = 'data.tar.gz'
 
         try:
             cmd = [ar_cmd, 'x', pkg_path]
@@ -1219,7 +1217,7 @@ class OpkgPM(OpkgDpkgPM):
                 priority += 5
 
             for line in (self.d.getVar('IPK_FEED_URIS') or "").split():
-                feed_match = re.match(r"^[ \t]*(.*)##([^ \t]*)[ \t]*$", line)
+                feed_match = re.match("^[ \t]*(.*)##([^ \t]*)[ \t]*$", line)
 
                 if feed_match is not None:
                     feed_name = feed_match.group(1)
@@ -1336,8 +1334,6 @@ class OpkgPM(OpkgDpkgPM):
         cmd = "%s %s" % (self.opkg_cmd, self.opkg_args)
         for exclude in (self.d.getVar("PACKAGE_EXCLUDE") or "").split():
             cmd += " --add-exclude %s" % exclude
-        for bad_recommendation in (self.d.getVar("BAD_RECOMMENDATIONS") or "").split():
-            cmd += " --add-ignore-recommends %s" % bad_recommendation
         cmd += " install "
         cmd += " ".join(pkgs)
 
@@ -1405,6 +1401,45 @@ class OpkgPM(OpkgDpkgPM):
 
     def list_installed(self):
         return OpkgPkgsList(self.d, self.target_rootfs, self.config_file).list_pkgs()
+
+    def handle_bad_recommendations(self):
+        bad_recommendations = self.d.getVar("BAD_RECOMMENDATIONS") or ""
+        if bad_recommendations.strip() == "":
+            return
+
+        status_file = os.path.join(self.opkg_dir, "status")
+
+        # If status file existed, it means the bad recommendations has already
+        # been handled
+        if os.path.exists(status_file):
+            return
+
+        cmd = "%s %s info " % (self.opkg_cmd, self.opkg_args)
+
+        with open(status_file, "w+") as status:
+            for pkg in bad_recommendations.split():
+                pkg_info = cmd + pkg
+
+                try:
+                    output = subprocess.check_output(pkg_info.split(), stderr=subprocess.STDOUT).strip().decode("utf-8")
+                except subprocess.CalledProcessError as e:
+                    bb.fatal("Cannot get package info. Command '%s' "
+                             "returned %d:\n%s" % (pkg_info, e.returncode, e.output.decode("utf-8")))
+
+                if output == "":
+                    bb.note("Ignored bad recommendation: '%s' is "
+                            "not a package" % pkg)
+                    continue
+
+                for line in output.split('\n'):
+                    if line.startswith("Status:"):
+                        status.write("Status: deinstall hold not-installed\n")
+                    else:
+                        status.write(line + "\n")
+
+                # Append a blank line after each package entry to ensure that it
+                # is separated from the following entry
+                status.write("\n")
 
     def dummy_install(self, pkgs):
         """
@@ -1490,7 +1525,7 @@ class OpkgPM(OpkgDpkgPM):
                      "trying to extract the package."  % pkg)
 
         tmp_dir = super(OpkgPM, self).extract(pkg, pkg_info)
-        bb.utils.remove(os.path.join(tmp_dir, "data.tar.xz"))
+        bb.utils.remove(os.path.join(tmp_dir, "data.tar.gz"))
 
         return tmp_dir
 
@@ -1562,7 +1597,7 @@ class DpkgPM(OpkgDpkgPM):
 
         with open(status_file, "r") as status:
             for line in status.read().split('\n'):
-                m = re.match(r"^Package: (.*)", line)
+                m = re.match("^Package: (.*)", line)
                 if m is not None:
                     installed_pkgs.append(m.group(1))
 
@@ -1627,13 +1662,13 @@ class DpkgPM(OpkgDpkgPM):
         # rename *.dpkg-new files/dirs
         for root, dirs, files in os.walk(self.target_rootfs):
             for dir in dirs:
-                new_dir = re.sub(r"\.dpkg-new", "", dir)
+                new_dir = re.sub("\.dpkg-new", "", dir)
                 if dir != new_dir:
                     os.rename(os.path.join(root, dir),
                               os.path.join(root, new_dir))
 
             for file in files:
-                new_file = re.sub(r"\.dpkg-new", "", file)
+                new_file = re.sub("\.dpkg-new", "", file)
                 if file != new_file:
                     os.rename(os.path.join(root, file),
                               os.path.join(root, new_file))
@@ -1698,7 +1733,7 @@ class DpkgPM(OpkgDpkgPM):
                     sources_file.write("deb %s ./\n" % uri)
 
     def _create_configs(self, archs, base_archs):
-        base_archs = re.sub(r"_", r"-", base_archs)
+        base_archs = re.sub("_", "-", base_archs)
 
         if os.path.exists(self.apt_conf_dir):
             bb.utils.remove(self.apt_conf_dir, True)
@@ -1752,7 +1787,7 @@ class DpkgPM(OpkgDpkgPM):
         with open(self.apt_conf_file, "w+") as apt_conf:
             with open(self.d.expand("${STAGING_ETCDIR_NATIVE}/apt/apt.conf.sample")) as apt_conf_sample:
                 for line in apt_conf_sample.read().split("\n"):
-                    match_arch = re.match(r"  Architecture \".*\";$", line)
+                    match_arch = re.match("  Architecture \".*\";$", line)
                     architectures = ""
                     if match_arch:
                         for base_arch in base_arch_list:
@@ -1760,8 +1795,8 @@ class DpkgPM(OpkgDpkgPM):
                         apt_conf.write("  Architectures {%s};\n" % architectures);
                         apt_conf.write("  Architecture \"%s\";\n" % base_archs)
                     else:
-                        line = re.sub(r"#ROOTFS#", self.target_rootfs, line)
-                        line = re.sub(r"#APTCONF#", self.apt_conf_dir, line)
+                        line = re.sub("#ROOTFS#", self.target_rootfs, line)
+                        line = re.sub("#APTCONF#", self.apt_conf_dir, line)
                         apt_conf.write(line + "\n")
 
         target_dpkg_dir = "%s/var/lib/dpkg" % self.target_rootfs

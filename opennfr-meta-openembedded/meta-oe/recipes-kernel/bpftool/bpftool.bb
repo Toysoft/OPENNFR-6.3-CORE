@@ -14,8 +14,6 @@ EXTRA_OEMAKE = "-C ${S}/tools/bpf/bpftool O=${B} CROSS=${TARGET_PREFIX} CC="${CC
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
-COMPATIBLE_HOST_libc-musl = 'null'
-
 do_compile() {
     oe_runmake
 }
@@ -27,7 +25,7 @@ do_install() {
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 python do_package_prepend() {
-    d.setVar('PKGV', d.getVar("KERNEL_VERSION").split("-")[0])
+    d.setVar('PKGV', d.getVar("KERNEL_VERSION", True).split("-")[0])
 }
 
 B = "${WORKDIR}/${BPN}-${PV}"

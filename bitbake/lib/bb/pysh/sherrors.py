@@ -13,3 +13,29 @@ class ShellError(Exception):
 
 class ShellSyntaxError(ShellError):
     pass
+    
+class UtilityError(ShellError):
+    """Raised upon utility syntax error (option or operand error)."""
+    pass
+   
+class ExpansionError(ShellError):
+    pass
+     
+class CommandNotFound(ShellError):
+    """Specified command was not found."""
+    pass
+    
+class RedirectionError(ShellError):
+    pass
+    
+class VarAssignmentError(ShellError):
+    """Variable assignment error."""
+    pass
+    
+class ExitSignal(ShellError):
+    """Exit signal."""
+    pass
+    
+class ReturnSignal(ShellError):
+    """Exit signal."""
+    pass

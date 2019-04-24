@@ -33,7 +33,6 @@ SRC_URI += "\
   file://float-endian.patch \
   file://0001-closes-bpo-34540-Convert-shutil._call_external_zip-t.patch \
   file://0001-2.7-bpo-34623-Use-XML_SetHashSalt-in-_elementtree-GH.patch \
-  file://0001-python2-use-cc_basename-to-replace-CC-for-checking-c.patch \
 "
 
 S = "${WORKDIR}/Python-${PV}"
@@ -131,9 +130,6 @@ do_install() {
     if [ -z "${@bb.utils.filter('PACKAGECONFIG', 'bdb', d)}" ]; then
         rm -rf ${D}/${libdir}/python${PYTHON_MAJMIN}/bsddb
     fi
-
-    # Python 3.x version of 2to3 is now the default
-    mv ${D}/${bindir}/2to3 ${D}/${bindir}/2to3-${PYTHON_MAJMIN}
 }
 
 do_install_append_class-nativesdk () {
@@ -203,11 +199,7 @@ python(){
     bb.parse.mark_dependency(d, filename)
 
     with open(filename) as manifest_file:
-        manifest_str =  manifest_file.read()
-        json_start = manifest_str.find('# EOC') + 6
-        manifest_file.seek(json_start)
-        manifest_str = manifest_file.read()
-        python_manifest = json.loads(manifest_str, object_pairs_hook=collections.OrderedDict)
+        python_manifest=json.load(manifest_file, object_pairs_hook=collections.OrderedDict)
 
     include_pycs = d.getVar('INCLUDE_PYCS')
 

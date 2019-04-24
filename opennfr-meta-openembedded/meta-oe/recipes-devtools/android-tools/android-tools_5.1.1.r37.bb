@@ -57,9 +57,6 @@ B = "${WORKDIR}/${BPN}"
 ARM_INSTRUCTION_SET_armv4 = "arm"
 ARM_INSTRUCTION_SET_armv5 = "arm"
 
-COMPATIBLE_HOST_powerpc = "(null)"
-COMPATIBLE_HOST_powerpc64 = "(null)"
-
 inherit systemd
 
 SYSTEMD_SERVICE_${PN} = "android-tools-adbd.service"
@@ -93,9 +90,6 @@ do_compile() {
       ;;
       mips|mipsel)
         export android_arch=linux-mips
-      ;;
-      mips64|mips64el)
-        export android_arch=linux-mips64
       ;;
       powerpc|powerpc64)
         export android_arch=linux-ppc

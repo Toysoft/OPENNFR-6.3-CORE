@@ -256,7 +256,7 @@ class URI(object):
 
         # Identify if the URI is relative or not
         if urlp.scheme in self._relative_schemes and \
-           re.compile(r"^\w+:(?!//)").match(uri):
+           re.compile("^\w+:(?!//)").match(uri):
             self.relative = True
 
         if not self.relative:
@@ -1027,7 +1027,7 @@ def try_mirror_url(fetch, origud, ud, ld, check = False):
         raise
 
     except IOError as e:
-        if e.errno in [errno.ESTALE]:
+        if e.errno in [os.errno.ESTALE]:
             logger.warning("Stale Error Observed %s." % ud.url)
             return False
         raise
@@ -1716,7 +1716,7 @@ class Fetch(object):
                 update_stamp(ud, self.d)
 
             except IOError as e:
-                if e.errno in [errno.ESTALE]:
+                if e.errno in [os.errno.ESTALE]:
                     logger.error("Stale Error Observed %s." % u)
                     raise ChecksumError("Stale Error Detected")
 

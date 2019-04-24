@@ -1,8 +1,8 @@
-SRCDATE = "20190122"
+SRCDATE = "20190419"
 
 require airdigital-libs.inc
 
-SRC_URI[md5sum] = "377759c35e49b100a53118640e5c7d50"
-SRC_URI[sha256sum] = "c5abcdbaabae901ca6ba3326f4bf621b02ab1802bcb15a26caf6c2ec72688d82"
+SRC_URI[md5sum] = "33fb9b1194062c4ad97777e7bbbfcc36"
+SRC_URI[sha256sum] = "331e0951ffebaf87417a789348b26e7804f02e3d09b2f56c0064d53b4c3f027b"
 
 COMPATIBLE_MACHINE = "h10|h9|i55plus|h9combo"

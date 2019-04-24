@@ -105,7 +105,7 @@ do_install_append() {
     rmdir --ignore-fail-on-non-empty ${D}${libexecdir}
 }
 
-PACKAGES += "ntpdate sntp ntpq ${PN}-tickadj ${PN}-utils"
+PACKAGES += "ntpdate sntp ${PN}-tickadj ${PN}-utils"
 # NOTE: you don't need ntpdate, use "ntpd -q -g -x"
 
 # ntp originally includes tickadj. It's split off for inclusion in small firmware images on platforms
@@ -117,8 +117,6 @@ RDEPENDS_${PN} += "libgcc"
 RPROVIDES_${PN}-utils = "${PN}-bin"
 RREPLACES_${PN}-utils = "${PN}-bin"
 RCONFLICTS_${PN}-utils = "${PN}-bin"
-# ntpq was split out of ntp-utils
-RDEPENDS_${PN}-utils = "ntpq"
 
 SYSTEMD_PACKAGES = "${PN} ntpdate sntp"
 SYSTEMD_SERVICE_${PN} = "ntpd.service"
@@ -153,7 +151,6 @@ FILES_sntp = "${sbindir}/sntp \
               ${sysconfdir}/default/sntp \
               ${systemd_unitdir}/system/sntp.service \
              "
-FILES_ntpq = "${sbindir}/ntpq"
 
 CONFFILES_${PN} = "${sysconfdir}/ntp.conf"
 CONFFILES_ntpdate = "${sysconfdir}/default/ntpdate"

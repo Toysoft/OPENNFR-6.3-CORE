@@ -322,6 +322,8 @@ def build_dependencies(key, keys, shelldeps, varflagsexcl, d):
             if varflags.get("python"):
                 value = d.getVarFlag(key, "_content", False)
                 parser = bb.codeparser.PythonParser(key, logger)
+                if value and "\t" in value:
+                    logger.warning("Variable %s contains tabs, please remove these (%s)" % (key, d.getVar("FILE")))
                 parser.parse_python(value, filename=varflags.get("filename"), lineno=varflags.get("lineno"))
                 deps = deps | parser.references
                 deps = deps | (keys & parser.execs)
@@ -436,7 +438,7 @@ def generate_dependency_hash(tasklist, gendeps, lookupcache, whitelist, fn):
             if var is not None:
                 data = data + str(var)
         k = fn + "." + task
-        basehash[k] = hashlib.sha256(data.encode("utf-8")).hexdigest()
+        basehash[k] = hashlib.md5(data.encode("utf-8")).hexdigest()
         taskdeps[task] = alldeps
 
     return taskdeps, basehash

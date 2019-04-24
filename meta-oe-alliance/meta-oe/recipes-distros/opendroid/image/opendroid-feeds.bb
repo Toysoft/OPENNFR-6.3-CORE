@@ -6,8 +6,8 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 ALLOW_EMPTY_${PN} = "1"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-PV = "6.7"
-PR = "r3"
+PV = "6.8"
+PR = "r4"
 
 inherit packagegroup
 
@@ -16,6 +16,7 @@ RRECOMMENDS_${PN} = "\
     enigma2-skins \
     enigma2-display-skins \
     cdfs \
+    curlftpfs \
     enigma2-plugin-extensions-epgimport \
     enigma2-plugin-extensions-vhannibal-autosettings \
     enigma2-plugin-systemplugins-crossepg \

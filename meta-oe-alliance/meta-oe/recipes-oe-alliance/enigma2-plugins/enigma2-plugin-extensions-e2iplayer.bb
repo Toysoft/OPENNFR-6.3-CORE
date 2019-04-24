@@ -6,20 +6,25 @@ LICENSE = "GPLv2"
 require conf/license/license-gplv2.inc
 
 SRC_URI = "git://gitlab.com/e2i/e2iplayer.git;protocol=http"
+SRC_URI_append += "file://ffmpeg4.patch"
+
 S = "${WORKDIR}/git"
 
 inherit gitpkgv
 SRCREV = "${AUTOREV}"
 PV = "git${SRCPV}"
 PKGV = "git${GITPKGV}"
-PR = "r1"
+PR = "r2"
 
 inherit distutils-openplugins gettext
 
-RDEPENDS_${PN} = " \
+DEPENDS = "gettext-native python"
+RRECOMMENDS_${PN} = " \
+        enigma2-plugin-extensions-e2iplayer-deps \
         python-compression \
         python-core \
         python-html \
+        python-e2icjson \
         python-json \
         python-shell \
         python-subprocess \

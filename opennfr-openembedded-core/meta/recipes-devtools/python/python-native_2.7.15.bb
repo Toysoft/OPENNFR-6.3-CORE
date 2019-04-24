@@ -16,7 +16,6 @@ SRC_URI += "\
             file://builddir.patch \
             file://parallel-makeinst-create-bindir.patch \
             file://revert_use_of_sysconfigdata.patch \
-            file://0001-python-native-fix-one-do_populate_sysroot-warning.patch \
            "
 
 S = "${WORKDIR}/Python-${PV}"
@@ -68,13 +67,9 @@ python(){
 
     # Read JSON manifest
     import json
-    pythondir = d.getVar('THISDIR')
+    pythondir = d.getVar('THISDIR',True)
     with open(pythondir+'/python/python2-manifest.json') as manifest_file:
-        manifest_str =  manifest_file.read()
-        json_start = manifest_str.find('# EOC') + 6
-        manifest_file.seek(json_start)
-        manifest_str = manifest_file.read()
-        python_manifest = json.loads(manifest_str)
+        python_manifest=json.load(manifest_file)
 
     rprovides = d.getVar('RPROVIDES').split()
 

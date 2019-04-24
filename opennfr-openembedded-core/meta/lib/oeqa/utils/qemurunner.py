@@ -139,7 +139,7 @@ class QemuRunner:
 
     def launch(self, launch_cmd, get_ip = True, qemuparams = None, extra_bootparams = None, env = None):
         try:
-            self.threadsock, threadport = self.create_socket()
+            threadsock, threadport = self.create_socket()
             self.server_socket, self.serverport = self.create_socket()
         except socket.error as msg:
             self.logger.error("Failed to create listening socket: %s" % msg[1])
@@ -207,8 +207,8 @@ class QemuRunner:
                     # No point waiting any longer
                     self.logger.debug('runqemu exited with code %d' % self.runqemu.returncode)
                     self._dump_host()
-                    self.logger.debug("Output from runqemu:\n%s" % self.getOutput(output))
                     self.stop()
+                    self.logger.debug("Output from runqemu:\n%s" % self.getOutput(output))
                     return False
             time.sleep(0.5)
 
@@ -220,8 +220,8 @@ class QemuRunner:
             processes = ps.decode("utf-8")
             self.logger.debug("Running processes:\n%s" % processes)
             self._dump_host()
-            op = self.getOutput(output)
             self.stop()
+            op = self.getOutput(output)
             if op:
                 self.logger.error("Output from runqemu:\n%s" % op)
             else:
@@ -272,7 +272,7 @@ class QemuRunner:
         self.logger.debug("Target IP: %s" % self.ip)
         self.logger.debug("Server IP: %s" % self.server_ip)
 
-        self.thread = LoggingThread(self.log, self.threadsock, self.logger)
+        self.thread = LoggingThread(self.log, threadsock, self.logger)
         self.thread.start()
         if not self.thread.connection_established.wait(self.boottime):
             self.logger.error("Didn't receive a console connection from qemu. "
@@ -354,7 +354,6 @@ class QemuRunner:
             else:
                 self.logger.debug("Couldn't login into serial console"
                             " as root using blank password")
-                self.logger.debug("The output:\n%s" % output)
         except:
             self.logger.debug("Serial console failed while trying to login")
         return True
@@ -379,22 +378,14 @@ class QemuRunner:
             if self.runqemu.poll() is None:
                 self.logger.debug("Sending SIGKILL to runqemu")
                 os.killpg(os.getpgid(self.runqemu.pid), signal.SIGKILL)
-            self.runqemu.stdin.close()
-            self.runqemu.stdout.close()
             self.runqemu = None
-
         if hasattr(self, 'server_socket') and self.server_socket:
             self.server_socket.close()
             self.server_socket = None
-        if hasattr(self, 'threadsock') and self.threadsock:
-            self.threadsock.close()
-            self.threadsock = None
         self.qemupid = None
         self.ip = None
         if os.path.exists(self.qemu_pidfile):
             os.remove(self.qemu_pidfile)
-        if self.monitorpipe:
-            self.monitorpipe.close()
 
     def stop_qemu_system(self):
         if self.qemupid:
@@ -430,7 +421,7 @@ class QemuRunner:
                 return True
         return False
 
-    def run_serial(self, command, raw=False, timeout=60):
+    def run_serial(self, command, raw=False, timeout=5):
         # We assume target system have echo to get command status
         if not raw:
             command = "%s; echo $?\n" % command

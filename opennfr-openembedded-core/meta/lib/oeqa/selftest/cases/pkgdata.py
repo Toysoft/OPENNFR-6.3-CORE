@@ -13,7 +13,6 @@ class OePkgdataUtilTests(OESelftestTestCase):
         super(OePkgdataUtilTests, cls).setUpClass()
         # Ensure we have the right data in pkgdata
         cls.logger.info('Running bitbake to generate pkgdata')
-        bitbake('target-sdk-provides-dummy -c clean')
         bitbake('busybox zlib m4')
 
     @OETestID(1203)
@@ -83,7 +82,7 @@ class OePkgdataUtilTests(OESelftestTestCase):
             pkglist.remove('zlib-ptest') # in case ptest is disabled
         except ValueError:
             pass
-        self.assertEqual(pkglist, ['zlib', 'zlib-dbg', 'zlib-dev', 'zlib-doc', 'zlib-src', 'zlib-staticdev'], "Packages listed after remove: %s" % result.output)
+        self.assertEqual(pkglist, ['zlib', 'zlib-dbg', 'zlib-dev', 'zlib-doc', 'zlib-staticdev'], "Packages listed after remove: %s" % result.output)
         # With recipe specified, runtime
         result = runCmd('oe-pkgdata-util list-pkgs -p zlib -r')
         pkglist = sorted(result.output.split())
@@ -91,7 +90,7 @@ class OePkgdataUtilTests(OESelftestTestCase):
             pkglist.remove('libz-ptest') # in case ptest is disabled
         except ValueError:
             pass
-        self.assertEqual(pkglist, ['libz-dbg', 'libz-dev', 'libz-doc', 'libz-src', 'libz-staticdev', 'libz1'], "Packages listed after remove: %s" % result.output)
+        self.assertEqual(pkglist, ['libz-dbg', 'libz-dev', 'libz-doc', 'libz-staticdev', 'libz1'], "Packages listed after remove: %s" % result.output)
         # With recipe specified and unpackaged
         result = runCmd('oe-pkgdata-util list-pkgs -p zlib -u')
         pkglist = sorted(result.output.split())

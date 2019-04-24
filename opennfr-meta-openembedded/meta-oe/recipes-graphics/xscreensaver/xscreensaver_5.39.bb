@@ -19,8 +19,6 @@ RDEPENDS_${PN} += "xserver-nodm-init liberation-fonts"
 
 inherit systemd perlnative pkgconfig gettext autotools-brokensep distro_features_check
 
-EXTRA_OECONF += "--with-x-app-defaults=${datadir}/X11/app-defaults"
-
 REQUIRED_DISTRO_FEATURES = "x11"
 
 do_install_append() {
@@ -29,5 +27,3 @@ do_install_append() {
 
 FILES_${PN} += "${datadir}/X11/app-defaults/XScreenSaver"
 SYSTEMD_SERVICE_${PN} = "xscreensaver.service"
-
-CLEANBROKEN = "1"

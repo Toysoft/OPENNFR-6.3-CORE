@@ -3,11 +3,13 @@ HOMEPAGE = "http://live.gnome.org/NetworkManager/MobileBroadband/ServiceProvider
 SECTION = "network"
 LICENSE = "PD"
 LIC_FILES_CHKSUM = "file://COPYING;md5=87964579b2a8ece4bc6744d2dc9a8b04"
-SRCREV = "c7def60ba50d9cc30a90f69f89d7e82243501e86"
-PV = "20190116"
+SRCREV = "befcbbc9867e742ac16415660b0b7521218a530c"
+PV = "20170310"
 PE = "1"
 
-SRC_URI = "git://gitlab.gnome.org/GNOME/mobile-broadband-provider-info.git;protocol=https"
+SRC_URI = "git://gitlab.gnome.org/GNOME/mobile-broadband-provider-info.git;protocol=https \
+           file://multilibfix.patch \
+"
 S = "${WORKDIR}/git"
 
 inherit autotools

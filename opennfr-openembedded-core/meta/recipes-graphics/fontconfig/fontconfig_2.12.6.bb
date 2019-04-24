@@ -23,7 +23,6 @@ DEPENDS = "expat freetype zlib gperf-native"
 SRC_URI = "http://fontconfig.org/release/fontconfig-${PV}.tar.gz \
            file://revert-static-pkgconfig.patch \
            file://0001-src-fcxml.c-avoid-double-free-of-filename.patch \
-           file://0001-src-fccache.c-Fix-define-for-HAVE_POSIX_FADVISE.patch \
            "
 
 SRC_URI[md5sum] = "00e748c67fad11e7057a71ed385e8bdb"
@@ -37,12 +36,6 @@ do_configure_prepend() {
 }
 
 do_install_append_class-target() {
-    # duplicate fc-cache for postinstall script
-    mkdir -p ${D}${libexecdir}
-    ln ${D}${bindir}/fc-cache ${D}${libexecdir}/${MLPREFIX}fc-cache
-}
-
-do_install_append_class-nativesdk() {
     # duplicate fc-cache for postinstall script
     mkdir -p ${D}${libexecdir}
     ln ${D}${bindir}/fc-cache ${D}${libexecdir}/${MLPREFIX}fc-cache

@@ -10,8 +10,7 @@ inherit autotools systemd
 SRC_URI = "http://swupdate.openvpn.org/community/releases/openvpn-${PV}.tar.gz \
            file://openvpn \
            file://openvpn@.service \
-           file://openvpn-volatile.conf \
-           file://fix-build-openssl102q.patch"
+           file://openvpn-volatile.conf"
 
 SRC_URI[md5sum] = "e1929f82aff40f3d105e5f72aacff9c1"
 SRC_URI[sha256sum] = "cee3d3ca462960a50a67c0ebd186e01b6d13db70275205663695152c9aca8579"

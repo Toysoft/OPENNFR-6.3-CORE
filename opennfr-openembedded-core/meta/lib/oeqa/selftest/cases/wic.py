@@ -625,11 +625,9 @@ class Wic2(WicTestCase):
         self.remove_config(config)
 
         with runqemu('wic-image-minimal', ssh=False) as qemu:
-            cmd = "mount | grep '^/dev/' | cut -f1,3 -d ' ' | egrep -c -e '/dev/sda1 /boot' " \
-                  "-e '/dev/root /|/dev/sda2 /' -e '/dev/sda3 /media' -e '/dev/sda4 /mnt'"
+            cmd = "mount |grep '^/dev/' | cut -f1,3 -d ' ' | sort"
             status, output = qemu.run_serial(cmd)
-            self.assertEqual(1, status, 'Failed to run command "%s": %s' % (cmd, output))
-            self.assertEqual(output, '4')
+            self.assertEqual(output, '/dev/root /\r\n/dev/sda1 /boot\r\n/dev/sda3 /media\r\n/dev/sda4 /mnt')
             cmd = "grep UUID= /etc/fstab"
             status, output = qemu.run_serial(cmd)
             self.assertEqual(1, status, 'Failed to run command "%s": %s' % (cmd, output))

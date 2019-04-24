@@ -38,9 +38,15 @@ EXTRA_OECONF = " \
     --without-tcl \
 "
 
-EXTRA_AUTORECONF += "-I Tools/config"
-
 BBCLASSEXTEND = "native nativesdk"
+
+do_configure() {
+    install -m 0755 ${STAGING_DATADIR_NATIVE}/gnu-config/config.guess ${S}/Tools/config
+    install -m 0755 ${STAGING_DATADIR_NATIVE}/gnu-config/config.sub ${S}/Tools/config
+    install -m 0755 ${STAGING_DATADIR_NATIVE}/gnu-config/config.guess ${S}
+    install -m 0755 ${STAGING_DATADIR_NATIVE}/gnu-config/config.sub ${S}
+    oe_runconf
+}
 
 do_install_append_class-nativesdk() {
     cd ${D}${bindir}

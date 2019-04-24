@@ -3,7 +3,7 @@
 # packages.
 #
 
-DEPENDS_append_class-target = " qemu-native"
+DEPENDS += "qemu-native"
 inherit qemu
 
 PIXBUF_PACKAGES ??= "${PN}"

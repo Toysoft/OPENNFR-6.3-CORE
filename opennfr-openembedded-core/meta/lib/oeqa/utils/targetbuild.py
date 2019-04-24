@@ -20,9 +20,8 @@ class BuildProject(metaclass=ABCMeta):
         if not tmpdir:
             tmpdir = self.d.getVar('WORKDIR')
             if not tmpdir:
-                self.tempdirobj = tempfile.TemporaryDirectory(prefix='buildproject-')
-                tmpdir = self.tempdirobj.name
-        self.localarchive = os.path.join(tmpdir, self.archive)
+                tmpdir = tempfile.mkdtemp(prefix='buildproject')
+        self.localarchive = os.path.join(tmpdir,self.archive)
         if foldername:
             self.fname = foldername
         else:

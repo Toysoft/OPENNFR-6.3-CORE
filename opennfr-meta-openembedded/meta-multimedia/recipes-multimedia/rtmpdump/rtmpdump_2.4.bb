@@ -5,7 +5,7 @@ HOMEPAGE = "http://rtmpdump.mplayerhq.hu/"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
 
-DEPENDS = "gnutls zlib"
+DEPENDS = "openssl10 zlib"
 
 SRCREV = "fa8646daeb19dfd12c181f7d19de708d623704c0"
 SRC_URI = " \
@@ -18,5 +18,5 @@ inherit autotools-brokensep
 
 EXTRA_OEMAKE = " \
     CC='${CC}' LD='${LD} ${STAGING_LIBDIR}' XCFLAGS='${CFLAGS}' XLDFLAGS='${LDFLAGS}' \
-    SYS=posix INC=-I=/usr/include DESTDIR=${D} CRYPTO=GNUTLS \
+    SYS=posix INC=-I=/usr/include DESTDIR=${D} \
     prefix=${prefix} libdir=${libdir} incdir=${includedir}/librtmp bindir=${bindir} mandir=${mandir}"

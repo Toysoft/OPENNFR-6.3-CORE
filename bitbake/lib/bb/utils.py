@@ -708,7 +708,15 @@ def prunedir(topdir):
     # CAUTION:  This is dangerous!
     if _check_unsafe_delete_path(topdir):
         raise Exception('bb.utils.prunedir: called with dangerous path "%s", refusing to delete!' % topdir)
-    remove(topdir, recurse=True)
+    for root, dirs, files in os.walk(topdir, topdown = False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            if os.path.islink(os.path.join(root, name)):
+                os.remove(os.path.join(root, name))
+            else:
+                os.rmdir(os.path.join(root, name))
+    os.rmdir(topdir)
 
 #
 # Could also use return re.compile("(%s)" % "|".join(map(re.escape, suffixes))).sub(lambda mo: "", var)
@@ -1497,8 +1505,6 @@ def ioprio_set(who, cls, value):
       NR_ioprio_set = 251
     elif _unamearch[0] == "i" and _unamearch[2:3] == "86":
       NR_ioprio_set = 289
-    elif _unamearch == "aarch64":
-      NR_ioprio_set = 30
 
     if NR_ioprio_set:
         ioprio = value | (cls << IOPRIO_CLASS_SHIFT)

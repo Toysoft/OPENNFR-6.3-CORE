@@ -31,8 +31,6 @@ TESTIMAGE_AUTO ??= "0"
 # TEST_LOG_DIR contains a command ssh log and may contain infromation about what command is running, output and return codes and for qemu a boot log till login.
 # Booting is handled by this class, and it's not a test in itself.
 # TEST_QEMUBOOT_TIMEOUT can be used to set the maximum time in seconds the launch code will wait for the login prompt.
-# TEST_QEMUPARAMS can be used to pass extra parameters to qemu, e.g. "-m 1024" for setting the amount of ram to 1 GB.
-# TEST_RUNQEMUPARAMS can be used to pass extra parameters to runqemu, e.g. "gl" to enable OpenGL acceleration.
 
 TEST_LOG_DIR ?= "${WORKDIR}/testimage"
 
@@ -65,8 +63,6 @@ TEST_SUITES ?= "${DEFAULT_TEST_SUITES}"
 
 TEST_QEMUBOOT_TIMEOUT ?= "1000"
 TEST_TARGET ?= "qemu"
-TEST_QEMUPARAMS ?= ""
-TEST_RUNQEMUPARAMS ?= ""
 
 TESTIMAGEDEPENDS = ""
 TESTIMAGEDEPENDS_append_qemuall = " qemu-native:do_populate_sysroot qemu-helper-native:do_populate_sysroot qemu-helper-native:do_addto_recipe_sysroot"
@@ -79,7 +75,7 @@ TESTIMAGEDEPENDS += "${@bb.utils.contains('IMAGE_PKGTYPE', 'deb', 'apt-native:do
 TESTIMAGELOCK = "${TMPDIR}/testimage.lock"
 TESTIMAGELOCK_qemuall = ""
 
-TESTIMAGE_DUMP_DIR ?= "${LOG_DIR}/runtime-hostdump/"
+TESTIMAGE_DUMP_DIR ?= "/tmp/oe-saved-tests/"
 
 TESTIMAGE_UPDATE_VARS ?= "DL_DIR WORKDIR DEPLOY_DIR"
 
@@ -203,13 +199,12 @@ def testimage_main(d):
     machine = d.getVar("MACHINE")
 
     # Get rootfs
-    fstypes = d.getVar('IMAGE_FSTYPES').split()
-    if d.getVar("TEST_TARGET") == "qemu":
-        fstypes = [fs for fs in fstypes if fs in supported_fstypes]
-        if not fstypes:
-            bb.fatal('Unsupported image type built. Add a comptible image to '
-                     'IMAGE_FSTYPES. Supported types: %s' %
-                     ', '.join(supported_fstypes))
+    fstypes = [fs for fs in d.getVar('IMAGE_FSTYPES').split(' ')
+                  if fs in supported_fstypes]
+    if not fstypes:
+        bb.fatal('Unsupported image type built. Add a comptible image to '
+                 'IMAGE_FSTYPES. Supported types: %s' %
+                 ', '.join(supported_fstypes))
     rootfs = '%s.%s' % (image_name, fstypes[0])
 
     # Get tmpdir (not really used, just for compatibility)
@@ -233,7 +228,13 @@ def testimage_main(d):
     boottime = int(d.getVar("TEST_QEMUBOOT_TIMEOUT"))
 
     # Get use_kvm
-    kvm = oe.types.qemu_use_kvm(d.getVar('QEMU_USE_KVM'), d.getVar('TARGET_ARCH'))
+    qemu_use_kvm = d.getVar("QEMU_USE_KVM")
+    if qemu_use_kvm and \
+       (d.getVar('MACHINE') in qemu_use_kvm.split() or \
+        oe.types.boolean(qemu_use_kvm) and 'x86' in machine):
+        kvm = True
+    else:
+        kvm = False
 
     slirp = False
     if d.getVar("QEMU_USE_SLIRP"):
@@ -251,7 +252,6 @@ def testimage_main(d):
                       'bootlog'     : bootlog,
                       'kvm'         : kvm,
                       'slirp'       : slirp,
-                      'dump_dir'    : d.getVar("TESTIMAGE_DUMP_DIR"),
                     }
 
     # TODO: Currently BBPATH is needed for custom loading of targets.
@@ -291,12 +291,17 @@ def testimage_main(d):
 
     package_extraction(d, tc.suites)
 
+    bootparams = None
+    if d.getVar('VIRTUAL-RUNTIME_init_manager', '') == 'systemd':
+        # Add systemd.log_level=debug to enable systemd debug logging
+        bootparams = 'systemd.log_target=console'
+
     results = None
     orig_sigterm_handler = signal.signal(signal.SIGTERM, sigterm_exception)
     try:
         # We need to check if runqemu ends unexpectedly
         # or if the worker send us a SIGTERM
-        tc.target.start(params=d.getVar("TEST_QEMUPARAMS"), runqemuparams=d.getVar("TEST_RUNQEMUPARAMS"))
+        tc.target.start(extra_bootparams=bootparams)
         results = tc.runTests()
     except (RuntimeError, BlockingIOError) as err:
         if isinstance(err, RuntimeError):

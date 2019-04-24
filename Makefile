@@ -8,7 +8,9 @@ PARALLEL_MAKE ?= -j $(NR_CPU)
 
 XSUM ?= md5sum
 DISTRO_TYPE ?= release
-DISTRO ?= opennfr
+DISTRO ?= openatv
+ONLINECHECK_URL ?= "http://google.com"
+ONLINECHECK_TIMEOUT ?= 2
 
 BUILD_DIR = $(CURDIR)/builds/$(DISTRO)/$(DISTRO_TYPE)/$(MACHINE)
 TOPDIR = $(BUILD_DIR)
@@ -31,9 +33,11 @@ BBLAYERS ?= \
 	$(CURDIR)/meta-oe-alliance/meta-oe \
 	$(CURDIR)/meta-qt5 \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-airdigital \
+	$(CURDIR)/meta-oe-alliance/meta-brands/meta-amiko \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-azbox \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-ax \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-blackbox \
+	$(CURDIR)/meta-oe-alliance/meta-brands/meta-beyonwiz \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-ceryon \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-clap \
 	$(CURDIR)/meta-oe-alliance/meta-brands/meta-cube \
@@ -851,6 +855,9 @@ MACHINEBUILD=gbquad4k
 else ifeq ($(MACHINEBUILD),gbue4k)
 MACHINE=gb7252
 MACHINEBUILD=gbue4k
+else ifeq ($(MACHINEBUILD),gbtrio4k)
+MACHINE=gbmv200
+MACHINEBUILD=gbtrio4k
 
 else ifeq ($(MACHINEBUILD),xpeedlxcs2)
 MACHINE=ultramini
@@ -883,6 +890,9 @@ MACHINEBUILD=axashis4kcombo
 else ifeq ($(MACHINEBUILD),dinobot4kl)
 MACHINE=u51
 MACHINEBUILD=dinobot4kl
+else ifeq ($(MACHINEBUILD),protek4kx1)
+MACHINE=u51
+MACHINEBUILD=protek4kx1
 else ifeq ($(MACHINEBUILD),dinobot4k)
 MACHINE=u5
 MACHINEBUILD=dinobot4k
@@ -910,9 +920,21 @@ MACHINEBUILD=dinobot4kpro
 else ifeq ($(MACHINEBUILD),dinobotu55)
 MACHINE=u55
 MACHINEBUILD=dinobotu55
+else ifeq ($(MACHINEBUILD),iziboxone4k)
+MACHINE=u55
+MACHINEBUILD=iziboxone4k
+else ifeq ($(MACHINEBUILD),hitube4k)
+MACHINE=u55
+MACHINEBUILD=hitube4k
+else ifeq ($(MACHINEBUILD),axashisc4k)
+MACHINE=u56
+MACHINEBUILD=axashisc4k
 else ifeq ($(MACHINEBUILD),dinoboth265)
 MACHINE=u41
 MACHINEBUILD=dinoboth265
+else ifeq ($(MACHINEBUILD),axashistwin)
+MACHINE=u41
+MACHINEBUILD=axashistwin
 
 else ifeq ($(MACHINEBUILD),clap4k)
 MACHINE=cc1
@@ -983,7 +1005,20 @@ $(TOPDIR)/env.source: $(DEPDIR)/.env.source.$(BITBAKE_ENV_HASH)
 	@echo 'export MACHINE=$(MACHINE)' >> $@
 	@echo 'export DISTRO=$(DISTRO)' >> $@
 	@echo 'export MACHINEBUILD=$(MACHINEBUILD)' >> $@
-	@echo 'export PATH=$(CURDIR)/opennfr-openembedded-core/scripts:$(CURDIR)/bitbake/bin:$${PATH}' >> $@
+	@echo 'export PATH=$(CURDIR)/openembedded-core/scripts:$(CURDIR)/bitbake/bin:$${PATH}' >> $@
+	@echo 'if [[ $$BB_NO_NETWORK -eq 1 ]]; then' >> $@
+	@echo ' export BB_SRCREV_POLICY="cache"' >> $@
+	@echo ' echo -e "\e[95mforced offline mode\e[0m"' >> $@
+	@echo 'else' >> $@
+	@echo ' echo -n -e "check internet connection: \e[93mWaiting ...\e[0m"' >> $@
+	@echo ' wget -q --tries=10 --timeout=$(ONLINECHECK_TIMEOUT) --spider $(ONLINECHECK_URL)' >> $@
+	@echo ' if [[ $$? -eq 0 ]]; then' >> $@
+	@echo '  echo -e "\b\b\b\b\b\b\b\b\b\b\b\e[32mOnline      \e[0m"' >> $@
+	@echo ' else' >> $@
+	@echo '  echo -e "\b\b\b\b\b\b\b\b\b\b\b\e[31mOffline     \e[0m"' >> $@
+	@echo '  export BB_SRCREV_POLICY="cache"' >> $@
+	@echo ' fi' >> $@
+	@echo 'fi' >> $@
 
 $(DISTRO)_CONF_HASH := $(call hash, \
 	'$(DISTRO)_CONF_VERSION = "1"' \
@@ -1025,12 +1060,11 @@ $(TOPDIR)/conf/local.conf: $(DEPDIR)/.local.conf.$(LOCAL_CONF_HASH)
 $(TOPDIR)/conf/site.conf: $(CURDIR)/site.conf
 	@ln -s ../../../../../site.conf $@
 
-OPT_ARCH=native         # Overrideable on the command-line
 $(CURDIR)/site.conf:
 	@echo 'SCONF_VERSION = "1"' >> $@
 	@echo 'BB_NUMBER_THREADS = "$(BB_NUMBER_THREADS)"' >> $@
 	@echo 'PARALLEL_MAKE = "$(PARALLEL_MAKE)"' >> $@
-	@echo 'BUILD_OPTIMIZATION = "-march=$(OPT_ARCH) -O2 -pipe"' >> $@
+	@echo 'BUILD_OPTIMIZATION = "-march=native -O2 -pipe"' >> $@
 	@echo 'DL_DIR = "$(DL_DIR)"' >> $@
 	@echo 'INHERIT += "rm_work"' >> $@
 

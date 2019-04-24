@@ -199,7 +199,7 @@ class Git(FetchMethod):
             depth_default = 1
         ud.shallow_depths = collections.defaultdict(lambda: depth_default)
 
-        revs_default = d.getVar("BB_GIT_SHALLOW_REVS")
+        revs_default = d.getVar("BB_GIT_SHALLOW_REVS", True)
         ud.shallow_revs = []
         ud.branches = {}
         for pos, name in enumerate(ud.names):
@@ -615,7 +615,7 @@ class Git(FetchMethod):
         """
         pupver = ('', '')
 
-        tagregex = re.compile(d.getVar('UPSTREAM_CHECK_GITTAGREGEX') or r"(?P<pver>([0-9][\.|_]?)+)")
+        tagregex = re.compile(d.getVar('UPSTREAM_CHECK_GITTAGREGEX') or "(?P<pver>([0-9][\.|_]?)+)")
         try:
             output = self._lsremote(ud, d, "refs/tags/*")
         except (bb.fetch2.FetchError, bb.fetch2.NetworkAccess) as e:
@@ -630,7 +630,7 @@ class Git(FetchMethod):
 
             tag_head = line.split("/")[-1]
             # Ignore non-released branches
-            m = re.search(r"(alpha|beta|rc|final)+", tag_head)
+            m = re.search("(alpha|beta|rc|final)+", tag_head)
             if m:
                 continue
 

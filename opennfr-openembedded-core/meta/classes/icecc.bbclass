@@ -34,12 +34,9 @@ BB_HASHBASE_WHITELIST += "ICECC_PARALLEL_MAKE ICECC_DISABLED ICECC_USER_PACKAGE_
     ICECC_DEBUG ICECC_LOGFILE ICECC_REPEAT_RATE ICECC_PREFERRED_HOST \
     ICECC_CLANG_REMOTE_CPP ICECC_IGNORE_UNVERIFIED ICECC_TEST_SOCKET \
     ICECC_ENV_DEBUG ICECC_SYSTEM_PACKAGE_BL ICECC_SYSTEM_CLASS_BL \
-    ICECC_REMOTE_CPP \
     "
 
 ICECC_ENV_EXEC ?= "${STAGING_BINDIR_NATIVE}/icecc-create-env"
-
-HOSTTOOLS_NONFATAL += "icecc patchelf"
 
 # This version can be incremented when changes are made to the environment that
 # invalidate the version on the compile nodes. Changing it will cause a new
@@ -56,8 +53,6 @@ ICECC_ENV_VERSION = "2"
 #
 # See: https://github.com/icecc/icecream/issues/190
 export ICECC_CARET_WORKAROUND ??= "0"
-
-export ICECC_REMOTE_CPP ??= "1"
 
 ICECC_CFLAGS = ""
 CFLAGS += "${ICECC_CFLAGS}"
@@ -103,11 +98,9 @@ DEPENDS_prepend += "${@icecc_dep_prepend(d)} "
 
 get_cross_kernel_cc[vardepsexclude] += "KERNEL_CC"
 def get_cross_kernel_cc(bb,d):
-    if not icecc_is_kernel(bb, d):
-        return None
+    kernel_cc = d.getVar('KERNEL_CC')
 
     # evaluate the expression by the shell if necessary
-    kernel_cc = d.getVar('KERNEL_CC')
     if '`' in kernel_cc or '$(' in kernel_cc:
         import subprocess
         kernel_cc = subprocess.check_output("echo %s" % kernel_cc, shell=True).decode("utf-8")[:-1]
@@ -119,6 +112,38 @@ def get_cross_kernel_cc(bb,d):
 
 def get_icecc(d):
     return d.getVar('ICECC_PATH') or bb.utils.which(os.getenv("PATH"), "icecc")
+
+def create_path(compilers, bb, d):
+    """
+    Create Symlinks for the icecc in the staging directory
+    """
+    staging = os.path.join(d.expand('${STAGING_BINDIR}'), "ice")
+    if icecc_is_kernel(bb, d):
+        staging += "-kernel"
+
+    #check if the icecc path is set by the user
+    icecc = get_icecc(d)
+
+    # Create the dir if necessary
+    try:
+        os.stat(staging)
+    except:
+        try:
+            os.makedirs(staging)
+        except:
+            pass
+
+    for compiler in compilers:
+        gcc_path = os.path.join(staging, compiler)
+        try:
+            os.stat(gcc_path)
+        except:
+            try:
+                os.symlink(icecc, gcc_path)
+            except:
+                pass
+
+    return staging
 
 def use_icecc(bb,d):
     if d.getVar('ICECC_DISABLED') == "1":
@@ -133,13 +158,6 @@ def use_icecc(bb,d):
         return "no"
 
     pn = d.getVar('PN')
-    bpn = d.getVar('BPN')
-
-    # Blacklist/whitelist checks are made against BPN, because there is a good
-    # chance that if icecc should be skipped for a recipe, it should be skipped
-    # for all the variants of that recipe. PN is still checked in case a user
-    # specified a more specific recipe.
-    check_pn = set([pn, bpn])
 
     system_class_blacklist = (d.getVar('ICECC_SYSTEM_CLASS_BL') or "").split()
     user_class_blacklist = (d.getVar('ICECC_USER_CLASS_BL') or "none").split()
@@ -155,11 +173,11 @@ def use_icecc(bb,d):
     user_package_whitelist = (d.getVar('ICECC_USER_PACKAGE_WL') or "").split()
     package_blacklist = system_package_blacklist + user_package_blacklist
 
-    if check_pn & set(package_blacklist):
+    if pn in package_blacklist:
         bb.debug(1, "%s: found in blacklist, disable icecc" % pn)
         return "no"
 
-    if check_pn & set(user_package_whitelist):
+    if pn in user_package_whitelist:
         bb.debug(1, "%s: found in whitelist, enable icecc" % pn)
         return "yes"
 
@@ -230,11 +248,12 @@ def icecc_path(bb,d):
         # don't create unnecessary directories when icecc is disabled
         return
 
-    staging = os.path.join(d.expand('${STAGING_BINDIR}'), "ice")
     if icecc_is_kernel(bb, d):
-        staging += "-kernel"
+        return create_path( [get_cross_kernel_cc(bb,d), ], bb, d)
 
-    return staging
+    else:
+        prefix = d.expand('${HOST_PREFIX}')
+        return create_path( [prefix+"gcc", prefix+"g++"], bb, d)
 
 def icecc_get_external_tool(bb, d, tool):
     external_toolchain_bindir = d.expand('${EXTERNAL_TOOLCHAIN}${bindir_cross}')
@@ -284,9 +303,9 @@ def icecc_get_and_check_tool(bb, d, tool):
     # compiler environment package.
     t = icecc_get_tool(bb, d, tool)
     if t:
-        link_path = icecc_get_tool_link(t, d)
+        link_path = icecc_get_tool_link(tool, d)
         if link_path == get_icecc(d):
-            bb.error("%s is a symlink to %s in PATH and this prevents icecc from working" % (t, link_path))
+            bb.error("%s is a symlink to %s in PATH and this prevents icecc from working" % (t, get_icecc(d)))
             return ""
         else:
             return t
@@ -331,27 +350,6 @@ set_icecc_env() {
         return
     fi
 
-    ICECC_BIN="${@get_icecc(d)}"
-    if [ -z "${ICECC_BIN}" ]; then
-        bbwarn "Cannot use icecc: icecc binary not found"
-        return
-    fi
-    if [ -z "$(which patchelf patchelf-uninative)" ]; then
-        bbwarn "Cannot use icecc: patchelf not found"
-        return
-    fi
-
-    # Create symlinks to icecc in the recipe-sysroot directory
-    mkdir -p ${ICE_PATH}
-    if [ -n "${KERNEL_CC}" ]; then
-        compilers="${@get_cross_kernel_cc(bb,d)}"
-    else
-        compilers="${HOST_PREFIX}gcc ${HOST_PREFIX}g++"
-    fi
-    for compiler in $compilers; do
-        ln -sf ${ICECC_BIN} ${ICE_PATH}/$compiler
-    done
-
     ICECC_CC="${@icecc_get_and_check_tool(bb, d, "gcc")}"
     ICECC_CXX="${@icecc_get_and_check_tool(bb, d, "g++")}"
     # cannot use icecc_get_and_check_tool here because it assumes as without target_sys prefix
@@ -389,7 +387,7 @@ set_icecc_env() {
             ${ICECC_ENV_EXEC} ${ICECC_ENV_DEBUG} "${ICECC_CC}" "${ICECC_CXX}" "${ICECC_AS}" "${ICECC_VERSION}"
         then
             touch "${ICECC_VERSION}.done"
-        elif ! wait_for_file "${ICECC_VERSION}.done" 30
+        elif [ ! wait_for_file "${ICECC_VERSION}.done" 30 ]
         then
             # locking failed so wait for ${ICECC_VERSION}.done to appear
             bbwarn "Timeout waiting for ${ICECC_VERSION}.done"
@@ -400,7 +398,7 @@ set_icecc_env() {
     # Don't let ccache find the icecream compiler links that have been created, otherwise
     # it can end up invoking icecream recursively.
     export CCACHE_PATH="$PATH"
-    export CCACHE_DISABLE="1"
+    export CCACHE_DISBALE="1"
 
     export ICECC_VERSION ICECC_CC ICECC_CXX
     export PATH="$ICE_PATH:$PATH"

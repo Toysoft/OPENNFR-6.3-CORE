@@ -40,7 +40,6 @@ SRC_URI = "http://www.openssl.org/source/openssl-${PV}.tar.gz \
            file://0001-Fix-build-with-clang-using-external-assembler.patch \
            file://0001-openssl-force-soft-link-to-avoid-rare-race.patch \
            file://0001-allow-manpages-to-be-disabled.patch \
-           file://0001-Fix-BN_LLONG-breakage.patch \
            "
 
 SRC_URI_append_class-target = " \
@@ -77,9 +76,11 @@ EXTRA_OEMAKE = "${@bb.utils.contains('PACKAGECONFIG', 'manpages', '', 'OE_DISABL
 
 export OE_LDFLAGS = "${LDFLAGS}"
 
+# openssl fails with ccache: https://bugzilla.yoctoproject.org/show_bug.cgi?id=12810
+CCACHE = ""
+
 TERMIO ?= "-DTERMIO"
 TERMIO_libc-musl = "-DTERMIOS"
-EXTRA_OECONF_append_libc-musl_powerpc64 = " no-asm"
 
 CFLAG = "${@oe.utils.conditional('SITEINFO_ENDIANNESS', 'le', '-DL_ENDIAN', '-DB_ENDIAN', d)} \
          ${TERMIO} ${CFLAGS} -Wall"
@@ -352,8 +353,8 @@ openssl_package_preprocess () {
         for file in `find ${PKGD} -name *.h -o -name *.pc -o -name *.so`; do
                 rm $file
         done
-        rm ${PKGD}${bindir}/openssl
-        rm ${PKGD}${bindir}/c_rehash
-        rmdir ${PKGD}${bindir}
+        rm ${PKGD}/usr/bin/openssl
+        rm ${PKGD}/usr/bin/c_rehash
+        rmdir ${PKGD}/usr/bin
 
 }

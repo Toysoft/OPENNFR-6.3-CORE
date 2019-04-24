@@ -16,8 +16,9 @@ IMAGE_BUILDINFO_VARS ?= "DISTRO DISTRO_VERSION"
 IMAGE_BUILDINFO_FILE ??= "${sysconfdir}/build"
 
 # From buildhistory.bbclass
-def image_buildinfo_outputvars(vars, d):
+def image_buildinfo_outputvars(vars, listvars, d): 
     vars = vars.split()
+    listvars = listvars.split()
     ret = ""
     for var in vars:
         value = d.getVar(var) or ""
@@ -58,7 +59,8 @@ def buildinfo_target(d):
                 return ""
         # Single and list variables to be read
         vars = (d.getVar("IMAGE_BUILDINFO_VARS") or "")
-        return image_buildinfo_outputvars(vars, d)
+        listvars = (d.getVar("IMAGE_BUILDINFO_LVARS") or "")
+        return image_buildinfo_outputvars(vars, listvars, d)
 
 # Write build information to target filesystem
 python buildinfo () {

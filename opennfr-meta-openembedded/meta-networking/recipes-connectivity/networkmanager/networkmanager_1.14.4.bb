@@ -16,6 +16,7 @@ DEPENDS = " \
     util-linux \
     libndp \
     libnewt \
+    polkit \
     jansson \
     curl \
 "
@@ -49,7 +50,6 @@ EXTRA_OECONF = " \
     --with-iptables=${sbindir}/iptables \
     --with-tests \
     --with-nmtui=yes \
-    --with-udev-dir=${nonarch_base_libdir}/udev \
 "
 
 # gobject-introspection related
@@ -68,13 +68,13 @@ do_compile_prepend() {
 PACKAGECONFIG ??= "nss ifupdown dhclient dnsmasq \
     ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd', bb.utils.contains('DISTRO_FEATURES', 'x11', 'consolekit', '', d), d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'bluetooth', '${BLUEZ}', '', d)} \
-    ${@bb.utils.filter('DISTRO_FEATURES', 'wifi polkit', d)} \
+    ${@bb.utils.filter('DISTRO_FEATURES', 'wifi', d)} \
 "
 PACKAGECONFIG[systemd] = " \
-    --with-systemdsystemunitdir=${systemd_unitdir}/system --with-session-tracking=systemd, \
+    --with-systemdsystemunitdir=${systemd_unitdir}/system --with-session-tracking=systemd --enable-polkit, \
     --without-systemdsystemunitdir, \
+    polkit \
 "
-PACKAGECONFIG[polkit] = "--enable-polkit --enable-polkit-agent,--disable-polkit --disable-polkit-agent,polkit"
 PACKAGECONFIG[bluez5] = "--enable-bluez5-dun,--disable-bluez5-dun,bluez5"
 # consolekit is not picked by shlibs, so add it to RDEPENDS too
 PACKAGECONFIG[consolekit] = "--with-session-tracking=consolekit,,consolekit,consolekit"
@@ -108,9 +108,8 @@ FILES_${PN} += " \
     ${nonarch_libdir}/NetworkManager/conf.d \
     ${datadir}/polkit-1 \
     ${datadir}/dbus-1 \
-    ${noarch_base_libdir}/udev/* \
+    ${base_libdir}/udev/* \
     ${systemd_unitdir}/system \
-    ${libdir}/pppd \
 "
 
 RRECOMMENDS_${PN} += "iptables \
