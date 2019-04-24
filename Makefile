@@ -8,9 +8,7 @@ PARALLEL_MAKE ?= -j $(NR_CPU)
 
 XSUM ?= md5sum
 DISTRO_TYPE ?= release
-DISTRO ?= openatv
-ONLINECHECK_URL ?= "http://google.com"
-ONLINECHECK_TIMEOUT ?= 2
+DISTRO ?= opennfr
 
 BUILD_DIR = $(CURDIR)/builds/$(DISTRO)/$(DISTRO_TYPE)/$(MACHINE)
 TOPDIR = $(BUILD_DIR)
@@ -1005,20 +1003,7 @@ $(TOPDIR)/env.source: $(DEPDIR)/.env.source.$(BITBAKE_ENV_HASH)
 	@echo 'export MACHINE=$(MACHINE)' >> $@
 	@echo 'export DISTRO=$(DISTRO)' >> $@
 	@echo 'export MACHINEBUILD=$(MACHINEBUILD)' >> $@
-	@echo 'export PATH=$(CURDIR)/openembedded-core/scripts:$(CURDIR)/bitbake/bin:$${PATH}' >> $@
-	@echo 'if [[ $$BB_NO_NETWORK -eq 1 ]]; then' >> $@
-	@echo ' export BB_SRCREV_POLICY="cache"' >> $@
-	@echo ' echo -e "\e[95mforced offline mode\e[0m"' >> $@
-	@echo 'else' >> $@
-	@echo ' echo -n -e "check internet connection: \e[93mWaiting ...\e[0m"' >> $@
-	@echo ' wget -q --tries=10 --timeout=$(ONLINECHECK_TIMEOUT) --spider $(ONLINECHECK_URL)' >> $@
-	@echo ' if [[ $$? -eq 0 ]]; then' >> $@
-	@echo '  echo -e "\b\b\b\b\b\b\b\b\b\b\b\e[32mOnline      \e[0m"' >> $@
-	@echo ' else' >> $@
-	@echo '  echo -e "\b\b\b\b\b\b\b\b\b\b\b\e[31mOffline     \e[0m"' >> $@
-	@echo '  export BB_SRCREV_POLICY="cache"' >> $@
-	@echo ' fi' >> $@
-	@echo 'fi' >> $@
+	@echo 'export PATH=$(CURDIR)/opennfr-openembedded-core/scripts:$(CURDIR)/bitbake/bin:$${PATH}' >> $@
 
 $(DISTRO)_CONF_HASH := $(call hash, \
 	'$(DISTRO)_CONF_VERSION = "1"' \
