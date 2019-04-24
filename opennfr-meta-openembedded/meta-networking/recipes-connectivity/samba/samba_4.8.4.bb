@@ -107,6 +107,16 @@ SAMBA4_MODULES="${SAMBA4_IDMAP_MODULES},${SAMBA4_PDB_MODULES},${SAMBA4_AUTH_MODU
 #
 SAMBA4_LIBS="heimdal,cmocka,ldb,pyldb-util,NONE"
 
+# interim packages: As long as ldb/pyldb-util are in SAMBA4_LIBS we need to pack
+# bundled libraries in seperate packages. Otherwise they are auto-packed in
+# package 'samba' which RDEPENDS on lots of packages not wanted e.g autostarting
+# nmbd/smbd daemons
+# Once 'ldb,pyldb-util' are removed from SAMBA4_LIBS the bundled packages can
+# be removed again.
+PACKAGES =+ "${PN}-bundled-ldb ${PN}-bundled-pyldb-util"
+FILES_${PN}-bundled-ldb = "${libdir}/samba/libldb${SOLIBS}"
+FILES_${PN}-bundled-pyldb-util = "${libdir}/samba/libpyldb-util${SOLIBS}"
+
 EXTRA_OECONF += "--enable-fhs \
                  --with-piddir=/run \
                  --with-sockets-dir=/run/samba \
@@ -220,16 +230,13 @@ RDEPENDS_${PN}-python += "pytalloc python-tdb"
 FILES_${PN}-base = "${sbindir}/nmbd \
                     ${sbindir}/smbd \
                     ${sysconfdir}/init.d \
-                    ${localstatedir}/lib/samba \
-                    ${localstatedir}/nmbd \
-                    ${localstatedir}/spool/samba \
                     ${systemd_system_unitdir}/nmb.service \
                     ${systemd_system_unitdir}/smb.service"
 
 FILES_${PN}-ad-dc = "${sbindir}/samba \
                      ${systemd_system_unitdir}/samba.service \
                      ${libdir}/krb5/plugins/kdb/samba.so \
-                    "
+"
 RDEPENDS_${PN}-ad-dc = "krb5-kdc"
 
 FILES_${PN}-ctdb-tests = "${bindir}/ctdb_run_tests \
@@ -237,11 +244,14 @@ FILES_${PN}-ctdb-tests = "${bindir}/ctdb_run_tests \
                           ${sysconfdir}/ctdb/nodes \
                           ${datadir}/ctdb-tests \
                           ${datadir}/ctdb/tests \
+                          ${localstatedir}/lib/ctdb \
                          "
 
 FILES_${BPN}-common = "${sysconfdir}/default \
                        ${sysconfdir}/samba \
                        ${sysconfdir}/tmpfiles.d \
+                       ${localstatedir}/lib/samba \
+                       ${localstatedir}/spool/samba \
 "
 
 FILES_${PN} += "${libdir}/vfs/*.so \
