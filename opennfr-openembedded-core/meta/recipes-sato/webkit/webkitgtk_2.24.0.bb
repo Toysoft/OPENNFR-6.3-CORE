@@ -20,6 +20,9 @@ SRC_URI = "http://www.webkitgtk.org/releases/${BPN}-${PV}.tar.xz \
            file://0001-WebKitMacros-Append-to-I-and-not-to-isystem.patch \
            file://0001-Fix-build-with-musl.patch \
            file://detect-gstreamer-gl.patch \
+           file://include_array.patch \
+           file://narrowing.patch \
+           file://snprintf.patch \
            "
 
 SRC_URI[md5sum] = "576d69c598b3e36c73441052d02466de"
@@ -28,6 +31,8 @@ SRC_URI[sha256sum] = "2e4ad1503fe482ceb5a83cf70ac9cd42f37eb718555a4d6844fe4c59a9
 inherit cmake pkgconfig gobject-introspection perlnative distro_features_check upstream-version-is-even gtk-doc
 
 REQUIRED_DISTRO_FEATURES = "x11 opengl"
+
+CVE_PRODUCT = "webkitgtk webkitgtk\+"
 
 DEPENDS = "zlib libsoup-2.4 curl libxml2 cairo libxslt libxt libidn libgcrypt \
            gtk+3 gstreamer1.0 gstreamer1.0-plugins-base flex-native gperf-native sqlite3 \
