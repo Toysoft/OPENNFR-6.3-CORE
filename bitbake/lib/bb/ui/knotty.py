@@ -222,6 +222,11 @@ class TerminalFilter(object):
             sys.stdout.flush()
         self.footer_present = False
 
+    def keepAlive(self, t):
+        if not self.cuu:
+            print("Bitbake still alive (%ds)" % t)
+            sys.stdout.flush()
+
     def updateFooter(self):
         if not self.cuu:
             return
@@ -455,11 +460,17 @@ def main(server, eventHandler, params, tf = TerminalFilter):
     warnings = 0
     taskfailures = []
 
+    printinterval = 5000
+    lastprint = time.time()
+
     termfilter = tf(main, helper, console, errconsole, format, params.options.quiet)
     atexit.register(termfilter.finish)
 
     while True:
         try:
+            if (lastprint + printinterval) <= time.time():
+                termfilter.keepAlive(printinterval)
+                printinterval += 5000
             event = eventHandler.waitEvent(0)
             if event is None:
                 if main.shutdown > 1:
@@ -488,6 +499,8 @@ def main(server, eventHandler, params, tf = TerminalFilter):
                 continue
 
             if isinstance(event, logging.LogRecord):
+                lastprint = time.time()
+                printinterval = 5000
                 if event.levelno >= format.ERROR:
                     errors = errors + 1
                     return_value = 1
