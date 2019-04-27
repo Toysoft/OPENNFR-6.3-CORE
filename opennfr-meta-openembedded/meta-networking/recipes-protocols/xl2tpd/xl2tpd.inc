@@ -6,7 +6,7 @@ DEPENDS = "ppp virtual/kernel"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 LICENSE = "GPLv2"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=0636e73ff0215e8d672dc4c32c317bb3"
 
 SRC_URI = "git://github.com/xelerance/xl2tpd.git \
 "
