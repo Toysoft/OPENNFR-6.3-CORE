@@ -2,11 +2,11 @@ DESCRIPTION = "OpenNFR version info"
 SECTION = "base"
 PRIORITY = "required"
 LICENSE = "proprietary"
-MAINTAINER = "OPENNFR Support team"
+MAINTAINER = "OPENNFR"
 require conf/license/license-gplv2.inc
 PV = "${IMAGE_VERSION}"
 PR = "${BUILD_VERSION}"
-PACKAGE_ARCH = "${MACHINE_ARCH}"
+PACKAGE_ARCH = "${MACHINEBUILD}"
 
 URL = "http://www.nachtfalke.biz"
 
@@ -18,7 +18,7 @@ PACKAGES = "${PN}"
 
 do_install() {
     install -d ${D}/etc
-    echo "box_type=${MACHINE}" > ${D}/etc/image-version
+    echo "box_type=${MACHINEBUILD}" > ${D}/etc/image-version
     echo "build_type=${BUILDTYPE}" >> ${D}/etc/image-version
     echo "machine_brand=${MACHINE_BRAND}" >> ${D}/etc/image-version
     echo "machine_name=${MACHINE_NAME}" >> ${D}/etc/image-version
@@ -64,7 +64,7 @@ do_install() {
     echo "wwol=${HAVE_WWOL}" >> ${D}/etc/image-version
     echo "ci=${HAVE_CI}" >> ${D}/etc/image-version
     echo "transcoding=${TRANSCODING}" >> ${D}/etc/image-version
-    echo "${MACHINE}" > ${D}/etc/model    
+    echo "${MACHINE}" > ${D}/etc/model
 }
 do_install[vardepsexclude] += "DATETIME"
 
