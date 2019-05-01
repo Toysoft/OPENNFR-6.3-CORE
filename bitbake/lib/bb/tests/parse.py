@@ -5,6 +5,8 @@
 #
 # Copyright (C) 2015 Richard Purdie
 #
+# SPDX-License-Identifier: GPL-2.0-only
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
 # published by the Free Software Foundation.
@@ -186,4 +188,22 @@ python () {
         d2 = alldata[cls.name]
         self.assertEqual(d1.getVar("VAR_var"), "B")
         self.assertEqual(d2.getVar("VAR_var"), None)
+
+    addtask_deltask = """
+addtask do_patch after do_foo after do_unpack before do_configure before do_compile
+addtask do_fetch do_patch
+
+deltask do_fetch do_patch
+"""
+    def test_parse_addtask_deltask(self):
+        import sys
+        f = self.parsehelper(self.addtask_deltask)
+        d = bb.parse.handle(f.name, self.d)['']
+
+        stdout = sys.stdout.getvalue()
+        self.assertTrue("addtask contained multiple 'before' keywords" in stdout)
+        self.assertTrue("addtask contained multiple 'after' keywords" in stdout)
+        self.assertTrue('addtask ignored: " do_patch"' in stdout)
+        self.assertTrue('deltask ignored: " do_patch"' in stdout)
+        self.assertTrue('dependent task do_foo does not exist' in stdout)
 

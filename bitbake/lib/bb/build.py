@@ -10,6 +10,8 @@
 #
 # Based on Gentoo's portage.py.
 #
+# SPDX-License-Identifier: GPL-2.0-only
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
 # published by the Free Software Foundation.
@@ -408,6 +410,8 @@ exit $ret
                     bb.plain(value)
                 elif cmd == 'bbnote':
                     bb.note(value)
+                elif cmd == 'bbverbnote':
+                    bb.verbnote(value)
                 elif cmd == 'bbwarn':
                     bb.warn(value)
                 elif cmd == 'bberror':
@@ -815,6 +819,9 @@ def add_tasks(tasklist, d):
         task_deps['parents'][task] = []
         if 'deps' in flags:
             for dep in flags['deps']:
+                # Check and warn for "addtask task after foo" while foo does not exist
+                if not dep in tasklist:
+                    bb.warn('%s: dependent task %s does not exist' % (d.getVar('PN'), dep))
                 dep = d.expand(dep)
                 task_deps['parents'][task].append(dep)
 

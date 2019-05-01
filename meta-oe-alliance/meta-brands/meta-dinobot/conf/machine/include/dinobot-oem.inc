@@ -169,7 +169,7 @@ PREFERRED_PROVIDER_virtual/libgles1 = "dinobot-opengl-${MACHINE}"
 PREFERRED_PROVIDER_virtual/libgles2 = "dinobot-opengl-${MACHINE}"
 PREFERRED_PROVIDER_virtual/kodi = "stb-kodi-${MACHINE}"
 PREFERRED_PROVIDER_virtual/blindscan-dvbs = "dinobot-blindscan-${MACHINE}"
-PREFERRED_VERSION_ffmpeg = "4.1.3"
+PREFERRED_VERSION_ffmpeg = "3.4.2"
 
 MACHINE_EXTRA_RRECOMMENDS += " \
     gstreamer1.0-plugin-dvbmediasink \
