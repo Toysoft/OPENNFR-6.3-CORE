@@ -1,7 +1,7 @@
 cml1_do_configure() {
 	set -e
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
-	oe_runmake oldconfig
+	oe_runmake olddefconfig
 }
 
 EXPORT_FUNCTIONS do_configure
