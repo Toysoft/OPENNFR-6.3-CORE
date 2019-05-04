@@ -30,6 +30,15 @@ def log(args, logger):
                 continue
             r = results[path][res]['result']
 
+            if args.dump_ptest:
+                if 'ptestresult.sections' in r:
+                    for name, ptest in r['ptestresult.sections'].items():
+                        if 'log' in ptest:
+                            dest = os.path.join(args.dump_ptest, '%s.log' % name)
+                            print(dest)
+                            with open(dest, 'w') as f:
+                                f.write(ptest['log'])
+
             if args.raw:
                 if 'ptestresult.rawlogs' in r:
                     print(r['ptestresult.rawlogs']['log'])
@@ -51,6 +60,8 @@ def register_commands(subparsers):
             help='the results file/directory/URL to import')
     parser.add_argument('--ptest', action='append', default=[],
             help='show logs for a ptest')
+    parser.add_argument('--dump-ptest', metavar='DIR',
+            help='Dump all ptest log files to the specified directory.')
     parser.add_argument('--raw', action='store_true',
             help='show raw logs')
 
