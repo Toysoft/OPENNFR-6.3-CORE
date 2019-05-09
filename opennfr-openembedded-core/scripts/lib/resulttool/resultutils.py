@@ -3,15 +3,9 @@
 # Copyright (c) 2019, Intel Corporation.
 # Copyright (c) 2019, Linux Foundation
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms and conditions of the GNU General Public License,
-# version 2, as published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
+
 import os
 import json
 import scriptpath
@@ -167,3 +161,19 @@ def git_get_result(repo, tags):
         append_resultsdata(results, obj)
 
     return results
+
+def test_run_results(results):
+    """
+    Convenient generator function that iterates over all test runs that have a
+    result section.
+
+    Generates a tuple of:
+        (result json file path, test run name, test run (dict), test run "results" (dict))
+    for each test run that has a "result" section
+    """
+    for path in results:
+        for run_name, test_run in results[path].items():
+            if not 'result' in test_run:
+                continue
+            yield path, run_name, test_run, test_run['result']
+

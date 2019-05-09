@@ -22,6 +22,7 @@ SRC_URI += "file://touchscreen.rules \
            file://0003-implment-systemd-sysv-install-for-OE.patch \
            file://0004-rules-whitelist-hd-devices.patch \
            file://0005-rules-watch-metadata-changes-in-ide-devices.patch \
+           file://0006-network-remove-redunant-link-name-in-message.patch \
            file://99-default.preset \
            "
 
@@ -143,7 +144,7 @@ PACKAGECONFIG[lz4] = "-Dlz4=true,-Dlz4=false,lz4"
 PACKAGECONFIG[machined] = "-Dmachined=true,-Dmachined=false"
 PACKAGECONFIG[manpages] = "-Dman=true,-Dman=false,libxslt-native xmlto-native docbook-xml-dtd4-native docbook-xsl-stylesheets-native"
 PACKAGECONFIG[microhttpd] = "-Dmicrohttpd=true,-Dmicrohttpd=false,libmicrohttpd"
-PACKAGECONFIG[myhostname] = "-Dnss-myhostname=true,-Dnss-myhostname=false"
+PACKAGECONFIG[myhostname] = "-Dnss-myhostname=true,-Dnss-myhostname=false,,libnss-myhostname"
 PACKAGECONFIG[networkd] = "-Dnetworkd=true,-Dnetworkd=false"
 PACKAGECONFIG[nss] = "-Dnss-systemd=true,-Dnss-systemd=false"
 PACKAGECONFIG[nss-mymachines] = "-Dnss-mymachines=true,-Dnss-mymachines=false"
@@ -203,8 +204,6 @@ EXTRA_OEMESON += "-Dkexec-path=${sbindir}/kexec \
                   -Dquotaon-path=${sbindir}/quotaon \
                   -Dsulogin-path=${base_sbindir}/sulogin \
                   -Dumount-path=${base_bindir}/umount"
-
-CFLAGS += "-Wno-error=format-overflow"
 
 do_install() {
 	meson_do_install
@@ -404,12 +403,15 @@ SYSTEMD_SERVICE_${PN}-remote = "systemd-journal-remote.socket"
 
 FILES_${PN}-container = "${sysconfdir}/dbus-1/system.d/org.freedesktop.import1.conf \
                          ${sysconfdir}/dbus-1/system.d/org.freedesktop.machine1.conf \
+                         ${sysconfdir}/systemd/system/multi-user.target.wants/machines.target \
                          ${base_bindir}/machinectl \
                          ${bindir}/systemd-nspawn \
                          ${nonarch_libdir}/systemd/import-pubring.gpg \
                          ${systemd_system_unitdir}/busnames.target.wants/org.freedesktop.import1.busname \
                          ${systemd_system_unitdir}/busnames.target.wants/org.freedesktop.machine1.busname \
                          ${systemd_system_unitdir}/local-fs.target.wants/var-lib-machines.mount \
+                         ${systemd_system_unitdir}/machines.target.wants/var-lib-machines.mount \
+                         ${systemd_system_unitdir}/remote-fs.target.wants/var-lib-machines.mount \
                          ${systemd_system_unitdir}/machine.slice \
                          ${systemd_system_unitdir}/machines.target \
                          ${systemd_system_unitdir}/org.freedesktop.import1.busname \
@@ -554,7 +556,6 @@ FILES_${PN}-dev += "${base_libdir}/security/*.la ${datadir}/dbus-1/interfaces/ $
 RDEPENDS_${PN} += "kmod dbus util-linux-mount util-linux-umount udev (= ${EXTENDPKGV}) util-linux-agetty util-linux-fsck"
 RDEPENDS_${PN} += "${@bb.utils.contains('PACKAGECONFIG', 'serial-getty-generator', '', 'systemd-serialgetty', d)}"
 RDEPENDS_${PN} += "volatile-binds update-rc.d"
-RDEPENDS_${PN} += "${@bb.utils.contains('PACKAGECONFIG', 'myhostname', 'libnss-myhostname', '', d)}"
 
 RRECOMMENDS_${PN} += "systemd-extra-utils \
                       systemd-compat-units udev-hwdb \

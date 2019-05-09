@@ -2,15 +2,9 @@
 #
 # Copyright (c) 2019 Garmin International
 #
-# This program is free software; you can redistribute it and/or modify it
-# under the terms and conditions of the GNU General Public License,
-# version 2, as published by the Free Software Foundation.
+# SPDX-License-Identifier: GPL-2.0-only
 #
-# This program is distributed in the hope it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
+import os
 import resulttool.resultutils as resultutils
 
 def show_ptest(result, ptest, logger):
@@ -24,31 +18,38 @@ def show_ptest(result, ptest, logger):
 
 def log(args, logger):
     results = resultutils.load_resultsdata(args.source)
-    for path in results:
-        for res in results[path]:
-            if 'result' not in results[path][res]:
-                continue
-            r = results[path][res]['result']
 
-            if args.dump_ptest:
-                if 'ptestresult.sections' in r:
-                    for name, ptest in r['ptestresult.sections'].items():
-                        if 'log' in ptest:
-                            dest = os.path.join(args.dump_ptest, '%s.log' % name)
-                            print(dest)
-                            with open(dest, 'w') as f:
-                                f.write(ptest['log'])
+    ptest_count = sum(1 for _, _, _, r in resultutils.test_run_results(results) if 'ptestresult.sections' in r)
+    if ptest_count > 1 and not args.prepend_run:
+        print("%i ptest sections found. '--prepend-run' is required" % ptest_count)
+        return 1
 
-            if args.raw:
-                if 'ptestresult.rawlogs' in r:
-                    print(r['ptestresult.rawlogs']['log'])
-                else:
-                    print('Raw logs not found')
-                    return 1
+    for _, run_name, _, r in resultutils.test_run_results(results):
+        if args.dump_ptest:
+            if 'ptestresult.sections' in r:
+                for name, ptest in r['ptestresult.sections'].items():
+                    if 'log' in ptest:
+                        dest_dir = args.dump_ptest
+                        if args.prepend_run:
+                            dest_dir = os.path.join(dest_dir, run_name)
 
-            for ptest in args.ptest:
-                if not show_ptest(r, ptest, logger):
-                    return 1
+                        os.makedirs(dest_dir, exist_ok=True)
+
+                        dest = os.path.join(dest_dir, '%s.log' % name)
+                        print(dest)
+                        with open(dest, 'w') as f:
+                            f.write(ptest['log'])
+
+        if args.raw:
+            if 'ptestresult.rawlogs' in r:
+                print(r['ptestresult.rawlogs']['log'])
+            else:
+                print('Raw logs not found')
+                return 1
+
+        for ptest in args.ptest:
+            if not show_ptest(r, ptest, logger):
+                return 1
 
 def register_commands(subparsers):
     """Register subcommands from this plugin"""
@@ -62,6 +63,9 @@ def register_commands(subparsers):
             help='show logs for a ptest')
     parser.add_argument('--dump-ptest', metavar='DIR',
             help='Dump all ptest log files to the specified directory.')
+    parser.add_argument('--prepend-run', action='store_true',
+            help='''Dump ptest results to a subdirectory named after the test run when using --dump-ptest.
+                    Required if more than one test run is present in the result file''')
     parser.add_argument('--raw', action='store_true',
             help='show raw logs')
 

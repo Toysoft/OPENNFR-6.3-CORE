@@ -6,7 +6,7 @@ Subject: [PATCH] handle read-only files
 Patch from:
 https://github.com/darealshinji/patchelf/commit/40e66392bc4b96e9b4eda496827d26348a503509
 
-Upstream-Status: Rejected [https://github.com/NixOS/patchelf/pull/89]
+Upstream-Status: Denied [https://github.com/NixOS/patchelf/pull/89]
 
 Signed-off-by: Fabio Berton <fabio.berton@ossystems.com.br>
 
