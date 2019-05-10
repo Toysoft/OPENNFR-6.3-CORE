@@ -52,6 +52,7 @@ python populate_packages_prepend() {
             if file.endswith(".png"):
                 fn = os.path.join(srcdir, file)
                 dn = os.path.join(path, file)
+                os.rename(fn, fn.replace(" ", "_"))
                 if os.path.islink(fn):
                     os.rename(fn, dn)
                 else:
