@@ -45,11 +45,6 @@ def meson_array(var, d):
     items = d.getVar(var).split()
     return repr(items[0] if len(items) == 1 else items)
 
-def meson_cross_extra_properties(d):
-    cross_properties = "\n"
-    cross_properties = cross_properties.join((d.getVar('MESON_CROSS_EXTRA_PROPS') or '').split())
-    return cross_properties
-
 # Map our ARCH values to what Meson expects:
 # http://mesonbuild.com/Reference-tables.html#cpu-families
 def meson_cpu_family(var, d):
@@ -81,7 +76,7 @@ def meson_endian(prefix, d):
         bb.fatal("Cannot determine endianism for %s-%s" % (arch, os))
 
 addtask write_config before do_configure
-do_write_config[vardeps] += "MESON_C_ARGS MESON_CPP_ARGS MESON_LINK_ARGS MESON_CROSS_EXTRA_PROPS CC CXX LD AR NM STRIP READELF"
+do_write_config[vardeps] += "MESON_C_ARGS MESON_CPP_ARGS MESON_LINK_ARGS CC CXX LD AR NM STRIP READELF"
 do_write_config() {
     # This needs to be Py to split the args into single-element lists
     cat >${WORKDIR}/meson.cross <<EOF
@@ -103,7 +98,6 @@ c_link_args = ${@meson_array('MESON_LINK_ARGS', d)}
 cpp_args = ${@meson_array('MESON_CPP_ARGS', d)}
 cpp_link_args = ${@meson_array('MESON_LINK_ARGS', d)}
 gtkdoc_exe_wrapper = '${B}/gtkdoc-qemuwrapper'
-${@meson_cross_extra_properties(d)}
 
 [host_machine]
 system = '${HOST_OS}'
