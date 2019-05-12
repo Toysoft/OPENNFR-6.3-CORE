@@ -2,6 +2,9 @@ SUMMARY = "Enigma2 is an experimental, but useful framebuffer-based frontend for
 MAINTAINER = "OE-Alliance"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=751419260aa954499f7abaabaa882bbe"
+LIC_FILES_CHKSUM_teamblue = "file://LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
+LIC_FILES_CHKSUM_openatv = "file://LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
+LIC_FILES_CHKSUM_beyonwiz = "file://LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 DEPENDS = " \
     freetype \
@@ -13,6 +16,7 @@ DEPENDS = " \
     python python-imaging python-twisted python-wifi \
     swig-native \
     tuxtxt-enigma2 \
+    ${@bb.utils.contains("DISTRO_NAME", "openspa", "uchardet" , "", d)} \
     ${@bb.utils.contains("MACHINE_FEATURES", "uianimation", "vuplus-libgles-${MACHINE} libvugles2" , "", d)} \
     ${@bb.utils.contains("MACHINE_FEATURES", "hiaccel", "dinobot-libs-${MACHINE}" , "", d)} \
     "
@@ -310,4 +314,5 @@ python populate_packages_prepend() {
     do_split_packages(d, enigma2_podir, '^(\w+)/[a-zA-Z0-9_/]+.*$', 'enigma2-locale-%s', '%s', recursive=True, match_path=True, prepend=True, extra_depends="enigma2")
 }
 
-PACKAGES_DYNAMIC = "enigma2-plugin-* enigma2-locale-*"
+do_package_qa() {
+}
