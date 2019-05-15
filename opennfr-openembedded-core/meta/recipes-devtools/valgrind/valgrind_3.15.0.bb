@@ -36,6 +36,9 @@ SRC_URI = "https://sourceware.org/pub/valgrind/valgrind-${PV}.tar.bz2 \
            file://0001-fix-opcode-not-supported-on-mips32-linux.patch \
            file://0001-Guard-against-__GLIBC_PREREQ-for-musl-libc.patch \
            file://0001-Make-local-functions-static-to-avoid-assembler-error.patch \
+           file://0001-Return-a-valid-exit_code-from-vg_regtest.patch \
+           file://0001-valgrind-filter_xml_frames-do-not-filter-usr.patch \
+           file://0002-valgrind-adjust-std_list-expected-output.patch \
            "
 SRC_URI[md5sum] = "46e5fbdcbc3502a5976a317a0860a975"
 SRC_URI[sha256sum] = "417c7a9da8f60dd05698b3a7bc6002e4ef996f14c13f0ff96679a16873e78ab1"
@@ -107,12 +110,13 @@ RDEPENDS_${PN} += "perl"
 # redirect functions like strlen.
 RRECOMMENDS_${PN} += "${TCLIBC}-dbg"
 
-RDEPENDS_${PN}-ptest += " sed perl perl-module-file-glob"
+RDEPENDS_${PN}-ptest += " sed perl perl-module-file-glob ${PN}-dbg"
 RDEPENDS_${PN}-ptest_append_libc-glibc = " glibc-utils"
 
 # One of the tests contains a bogus interpreter path on purpose.
 # Skip file dependency check
 SKIP_FILEDEPS_${PN}-ptest = '1'
+INSANE_SKIP_${PN}-ptest = "debug-deps"
 
 do_compile_ptest() {
     oe_runmake check
@@ -134,7 +138,17 @@ do_install_ptest() {
         # exclude shell or the package won't install
         rm -rf none/tests/shell* 2>/dev/null
 
-        subdirs="tests cachegrind/tests callgrind/tests drd/tests helgrind/tests massif/tests memcheck/tests none/tests"
+        subdirs=" \
+	   cachegrind/tests \
+	   callgrind/tests \
+	   drd/tests \
+	   gdbserver_tests \
+	   helgrind/tests \
+	   massif/tests \
+	   memcheck/tests \
+	   none/tests \
+	   tests \
+	"
 
         # Get the vg test scripts, filters, and expected files
         for dir in $subdirs ; do
@@ -143,6 +157,8 @@ do_install_ptest() {
         cd $saved_dir
     done
 
+    # Hide then restore a.c that is used by ann[12].vgtest in call/cachegrind
+    mv ${D}${PTEST_PATH}/cachegrind/tests/a.c ${D}${PTEST_PATH}/cachegrind/tests/a_c
     # clean out build artifacts before building the rpm
     find ${D}${PTEST_PATH} \
          \( -name "Makefile*" \
@@ -151,6 +167,14 @@ do_install_ptest() {
         -o -name "*.S" \
         -o -name "*.h" \) \
         -exec rm {} \;
+    mv ${D}${PTEST_PATH}/cachegrind/tests/a_c ${D}${PTEST_PATH}/cachegrind/tests/a.c
+
+    # find *_annotate in ${bindir} for yocto build
+    sed -i s:\.\./\.\./cachegrind/cg_annotate:${bindir}/cg_annotate: ${D}${PTEST_PATH}/cachegrind/tests/ann1.vgtest
+    sed -i s:\.\./\.\./cachegrind/cg_annotate:${bindir}/cg_annotate: ${D}${PTEST_PATH}/cachegrind/tests/ann2.vgtest
+
+    sed -i s:\.\./\.\./callgrind/callgrind_annotate:${bindir}/callgrind_annotate: ${D}${PTEST_PATH}/callgrind/tests/ann1.vgtest
+    sed -i s:\.\./\.\./callgrind/callgrind_annotate:${bindir}/callgrind_annotate: ${D}${PTEST_PATH}/callgrind/tests/ann2.vgtest
 
     # needed by massif tests
     cp ${B}/massif/ms_print ${D}${PTEST_PATH}/massif/ms_print

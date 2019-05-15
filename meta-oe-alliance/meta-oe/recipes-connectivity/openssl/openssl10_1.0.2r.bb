@@ -8,8 +8,18 @@ SECTION = "libs/network"
 LICENSE = "openssl"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=f475368924827d06d4b416111c8bdb77"
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 DEPENDS = "hostperl-runtime-native"
 DEPENDS_append_class-target = " openssl-native"
+
+PROVIDES += "libcrypto libssl openssl-conf openssl"
+RPROVIDES_libcrypto10 ="libcrypto"
+RPROVIDES_libssl10 ="libssl"
+RPROVIDES_openssl-conf10 ="openssl-conf"
+RPROVIDES_${PN} ="openssl"
 
 SRC_URI = "http://www.openssl.org/source/openssl-${PV}.tar.gz \
            file://run-ptest \
@@ -42,6 +52,8 @@ SRC_URI = "http://www.openssl.org/source/openssl-${PV}.tar.gz \
            file://0001-allow-manpages-to-be-disabled.patch \
            file://0001-Fix-BN_LLONG-breakage.patch \
            file://0001-Fix-DES_LONG-breakage.patch \
+           file://fix_openssl_100_version.patch \
+           file://fix_openssl_100_version_jethro.patch \
            "
 
 SRC_URI_append_class-target = " \
@@ -60,7 +72,7 @@ S = "${WORKDIR}/openssl-${PV}"
 
 UPSTREAM_CHECK_REGEX = "openssl-(?P<pver>1\.0.+)\.tar"
 
-inherit pkgconfig siteinfo multilib_header ptest manpages
+inherit pkgconfig siteinfo multilib_header ptest manpages upx-compress
 
 PACKAGECONFIG ?= "cryptodev-linux"
 PACKAGECONFIG_class-native = ""
@@ -349,12 +361,15 @@ PACKAGE_PREPROCESS_FUNCS += "openssl_package_preprocess"
 # files when installed into target rootfs. So we don't put them into
 # packages, but they continue to be provided via target sysroot for
 # cross-compilation on the host, if some software still depends on openssl 1.0.
+#openssl_package_preprocess () {
+#        for file in `find ${PKGD} -name *.h -o -name *.pc -o -name *.so`; do
+#                rm $file
+#        done
+#        rm ${PKGD}${bindir}/openssl
+#        rm ${PKGD}${bindir}/c_rehash
+#        rmdir ${PKGD}${bindir}
+#
+#}
 openssl_package_preprocess () {
-        for file in `find ${PKGD} -name *.h -o -name *.pc -o -name *.so`; do
-                rm $file
-        done
-        rm ${PKGD}${bindir}/openssl
-        rm ${PKGD}${bindir}/c_rehash
-        rmdir ${PKGD}${bindir}
-
+    :
 }
