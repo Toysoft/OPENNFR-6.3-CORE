@@ -27,7 +27,7 @@
 -->
 
 <cables>
-	<cable name="CableBruteforce Kurz" satfeed="true" flags="9">
+	<cable name="CableVillach" satfeed="true" flags="9" countrycode="AUT">
 		<transponder frequency="73000000" symbol_rate="6900000" fec_inner="9" modulation="6"/>
 		<transponder frequency="105000000" symbol_rate="6900000" fec_inner="9" modulation="6"/>
 		<transponder frequency="113000000" symbol_rate="6900000" fec_inner="9" modulation="6"/>
@@ -127,7 +127,7 @@
 		<transponder frequency="858000000" symbol_rate="6900000" fec_inner="9" modulation="6"/>
 		<transponder frequency="866000000" symbol_rate="6900000" fec_inner="9" modulation="6"/>
 	</cable>
-	<cable name="CableSH4" satfeed="true" flags="9">
+	<cable name="CableVillachSH4" satfeed="true" flags="9" countrycode="AUT">
 		<transponder frequency="314000000" symbol_rate="6900000" fec_inner="0" modulation="3"/>
 		<transponder frequency="322000000" symbol_rate="6900000" fec_inner="0" modulation="3"/>
 		<transponder frequency="330000000" symbol_rate="6900000" fec_inner="0" modulation="5"/>
