@@ -18,6 +18,5 @@ RDEPENDS_${PN} = "\
 	  ${@bb.utils.contains("DISTRO_NAME", "opennfr", "enigma2-plugin-systemplugins-wirelesslan", "", d)} \        
     ${@bb.utils.contains("DISTRO_NAME", "opennfr", "enigma2-plugin-drivers-network-usb-rt3070", "", d)} \
     ${@bb.utils.contains("DISTRO_NAME", "opennfr", "enigma2-plugin-drivers-network-usb-rt2800", "", d)} \ 
-    ${@bb.utils.contains("BRAND_OEM", "dinobot", "enigma2-plugin-drivers-network-usb-rtl8192eu enigma2-plugin-drivers-network-usb-rtl8822bu", "", d)} \  
-    ${@bb.utils.contains("MACHINE", "8100s", "enigma2-plugin-drivers-network-usb-mt7601u", "", d)} \    
+    ${@bb.utils.contains("BRAND_OEM", "dinobot", "enigma2-plugin-drivers-network-usb-rtl8192eu", "", d)} \    
     "
