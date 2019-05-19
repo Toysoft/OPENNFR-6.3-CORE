@@ -10,7 +10,7 @@ PR = "r0"
 
 SRC_URI = "file://*"
 
-FILES_${PN} = "/etc/enigma2/* /etc/tuxbox/* /etc/* /etc/init.d/* /etc/samba/* /etc/network/* "
+FILES_${PN} = "/etc/enigma2/* /etc/tuxbox/* /etc/* /etc/init.d/* /etc/samba/* /etc/network/* /usr/lib/* "
 S = "${WORKDIR}"
 
 do_install() {
@@ -32,12 +32,6 @@ do_install() {
         install -m 644 ${f} ${D}/etc/${f}
     done
 
-    install -d ${D}/etc/opkg
-    for f in secret-feed.conf secret-feed-arm.conf
-    do
-        install -m 644 ${f} ${D}/etc/opkg/${f}
-    done
-
     install -d ${D}/etc/init.d
     for f in swap
     do
@@ -48,6 +42,12 @@ do_install() {
     for f in interfaces-neu
     do
         install -m 755 ${f} ${D}/etc/network/${f}
+    done
+
+    install -d ${D}/usr/lib
+    for f in libcrypto.so.1.0.2-arm libssl.so.1.0.2-arm
+    do
+        install -m 755 ${f} ${D}/usr/lib/${f}
     done
 
 }

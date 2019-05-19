@@ -73,8 +73,9 @@ image_preprocess() {
 			ln -s libcrypto.so.1.0.2 libcrypto.so.0.9.8 || true
 			ln -s libcrypto.so.1.0.2 libcrypto.so.0.9.7 || true
 			ln -s libcrypto.so.1.0.2 libcrypto.so.1.0.0 || true
-			ln -s libssl.so.1.0.2 libssl.so.1.0.0 || true		
-			
+			ln -s libssl.so.1.0.2 libssl.so.1.0.0 || true
+			mv ${IMAGE_ROOTFS}/usr/lib/libcrypto.so.1.0.2-arm ${IMAGE_ROOTFS}/usr/lib/libcrypto.so.1.0.2
+			mv ${IMAGE_ROOTFS}/usr/lib/libssl.so.1.0.2-arm	${IMAGE_ROOTFS}/usr/lib/libssl.so.1.0.2	
 			cd $curdir
 
 			cd ${IMAGE_ROOTFS}/usr/emu
