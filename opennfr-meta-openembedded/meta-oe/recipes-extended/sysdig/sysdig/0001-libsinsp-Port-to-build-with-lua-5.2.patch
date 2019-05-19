@@ -8,36 +8,38 @@ Signed-off-by: Khem Raj <raj.khem@gmail.com>
  userspace/libsinsp/chisel.cpp | 40 +++++++++++++++++++++++++++++-----------
  1 file changed, 29 insertions(+), 11 deletions(-)
 
+diff --git a/userspace/libsinsp/chisel.cpp b/userspace/libsinsp/chisel.cpp
+index 3cfbd8d..2db9348 100644
 --- a/userspace/libsinsp/chisel.cpp
 +++ b/userspace/libsinsp/chisel.cpp
-@@ -97,7 +97,7 @@ void lua_stackdump(lua_State *L)
+@@ -94,7 +94,7 @@ void lua_stackdump(lua_State *L)
  // Lua callbacks
  ///////////////////////////////////////////////////////////////////////////////
  #ifdef HAS_LUA_CHISELS
--const static struct luaL_reg ll_sysdig [] =
+-const static struct luaL_reg ll_sysdig [] = 
 +const static struct luaL_Reg ll_sysdig [] =
  {
  	{"set_filter", &lua_cbacks::set_global_filter},
  	{"set_snaplen", &lua_cbacks::set_snaplen},
-@@ -133,7 +133,7 @@ const static struct luaL_reg ll_sysdig [
+@@ -120,7 +120,7 @@ const static struct luaL_reg ll_sysdig [] =
  	{NULL,NULL}
  };
  
--const static struct luaL_reg ll_chisel [] =
+-const static struct luaL_reg ll_chisel [] = 
 +const static struct luaL_Reg ll_chisel [] =
  {
  	{"request_field", &lua_cbacks::request_field},
  	{"set_filter", &lua_cbacks::set_filter},
-@@ -145,7 +145,7 @@ const static struct luaL_reg ll_chisel [
+@@ -131,7 +131,7 @@ const static struct luaL_reg ll_chisel [] =
  	{NULL,NULL}
  };
  
--const static struct luaL_reg ll_evt [] =
+-const static struct luaL_reg ll_evt [] = 
 +const static struct luaL_Reg ll_evt [] =
  {
  	{"field", &lua_cbacks::field},
  	{"get_num", &lua_cbacks::get_num},
-@@ -959,10 +959,28 @@ bool sinsp_chisel::parse_view_info(lua_S
+@@ -853,10 +853,28 @@ bool sinsp_chisel::parse_view_info(lua_State *ls, OUT chisel_desc* cd)
  
  
  #ifdef HAS_LUA_CHISELS
@@ -67,7 +69,7 @@ Signed-off-by: Khem Raj <raj.khem@gmail.com>
  	if(ls == NULL)
  	{
  		return false;
-@@ -973,9 +991,9 @@ bool sinsp_chisel::init_lua_chisel(chise
+@@ -867,9 +885,9 @@ bool sinsp_chisel::init_lua_chisel(chisel_desc &cd, string const &fpath)
  	//
  	// Load our own lua libs
  	//
@@ -80,13 +82,13 @@ Signed-off-by: Khem Raj <raj.khem@gmail.com>
  
  	//
  	// Add our chisel paths to package.path
-@@ -1203,16 +1221,16 @@ void sinsp_chisel::load(string cmdstr)
+@@ -1111,16 +1129,16 @@ void sinsp_chisel::load(string cmdstr)
  	//
  	// Open the script
  	//
 -	m_ls = lua_open();
 +	m_ls = luaL_newstate();
- 
+  
  	luaL_openlibs(m_ls);
  
  	//
@@ -101,3 +103,6 @@ Signed-off-by: Khem Raj <raj.khem@gmail.com>
  
  	//
  	// Add our chisel paths to package.path
+-- 
+2.6.2
+
