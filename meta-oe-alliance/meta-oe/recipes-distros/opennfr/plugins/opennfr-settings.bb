@@ -44,8 +44,8 @@ do_install() {
         install -m 755 ${f} ${D}/etc/network/${f}
     done
 
-    install -d ${D}/usr/lib
-    for f in libcrypto.so.1.0.2-arm libssl.so.1.0.2-arm
+    install -d ${D}/usr/lib 
+    for f in libcrypto.so.1.0.2-arm libssl.so.1.0.2-arm libcrypto.so.1.0.2-mips libssl.so.1.0.2-mips
     do
         install -m 755 ${f} ${D}/usr/lib/${f}
     done
