@@ -20,6 +20,7 @@ PREFERRED_PROVIDER_virtual/gettext ??= "gettext"
 
 GCCVERSION ?= "9.%"
 GCCVERSION_mips ?= "8.%"
+GCCVERSION_mips64 ?= "8.%"
 SDKGCCVERSION ?= "${GCCVERSION}"
 BINUVERSION ?= "2.32%"
 GDBVERSION ?= "8.3%"
