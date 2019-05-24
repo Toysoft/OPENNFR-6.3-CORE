@@ -44,7 +44,7 @@ inherit autotools gettext ptest
 
 EXTRA_OECONF = "--program-prefix=eu- --without-lzma"
 EXTRA_OECONF_append_class-native = " --without-bzlib"
-RDEPENDS_${PN}-ptest = "libasm libelf bash make coreutils ${PN}-binutils ${PN}"
+RDEPENDS_${PN}-ptest = "libasm libelf bash make coreutils ${PN}-binutils ${PN} ${PN}-dbg"
 
 EXTRA_OECONF_append_class-target += "--disable-tests-rpath"
 
@@ -61,6 +61,8 @@ do_compile_ptest() {
 
 do_install_ptest() {
 	if [ ${PTEST_ENABLED} = "1" ]; then
+		install -d -m 755                       ${D}${PTEST_PATH}/src
+		cp -r ${B}/src/*                        ${D}${PTEST_PATH}/src
 		cp -r ${S}/tests/                       ${D}${PTEST_PATH}
 		cp -r ${B}/tests/*                      ${D}${PTEST_PATH}/tests
 		cp -r ${B}/config.h                     ${D}${PTEST_PATH}
@@ -109,3 +111,4 @@ FILES_libdw  = "${libdir}/libdw-${PV}.so ${libdir}/libdw.so.* ${libdir}/elfutils
 
 # The package contains symlinks that trip up insane
 INSANE_SKIP_${MLPREFIX}libdw = "dev-so"
+INSANE_SKIP_${PN}-ptest += "debug-deps"

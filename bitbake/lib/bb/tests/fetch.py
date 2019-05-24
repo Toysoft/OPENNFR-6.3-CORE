@@ -992,7 +992,17 @@ class FetcherNetworkTest(FetcherTest):
         self.assertTrue(os.path.exists(os.path.join(repo_path, 'edgelet/hsm-sys/azure-iot-hsm-c/deps/utpm/deps/c-utility/testtools/umock-c/deps/testrunner/readme.md')), msg='Missing submodule checkout')
 
 class SVNTest(FetcherTest):
+    def skipIfNoSvn():
+        import shutil
+        if not shutil.which("svn"):
+            return unittest.skip("svn not installed,  tests being skipped")
 
+        if not shutil.which("svnadmin"):
+            return unittest.skip("svnadmin not installed,  tests being skipped")
+
+        return lambda f: f
+
+    @skipIfNoSvn()
     def setUp(self):
         """ Create a local repository """
 
@@ -1024,6 +1034,7 @@ class SVNTest(FetcherTest):
         self.src_dir = src_dir
         self.repo_dir = repo_dir
 
+    @skipIfNoSvn()
     def tearDown(self):
         os.chdir(self.origdir)
         if os.environ.get("BB_TMPDIR_NOCLEAN") == "yes":
@@ -1031,6 +1042,7 @@ class SVNTest(FetcherTest):
         else:
             bb.utils.prunedir(self.tempdir)
 
+    @skipIfNoSvn()
     @skipIfNoNetwork()
     def test_noexternal_svn(self):
         # Always match the rev count from setUp (currently rev 2)
@@ -1045,6 +1057,7 @@ class SVNTest(FetcherTest):
         self.assertFalse(os.path.exists(os.path.join(self.unpackdir, 'trunk/bitbake/trunk')), msg="External dir should NOT exist")
         self.assertFalse(os.path.exists(os.path.join(self.unpackdir, 'trunk/bitbake/trunk', 'README')), msg="External README should NOT exit")
 
+    @skipIfNoSvn()
     def test_external_svn(self):
         # Always match the rev count from setUp (currently rev 2)
         url = "svn://%s;module=trunk;protocol=file;externals=allowed;rev=2" % self.repo_url.replace('file://', '')
