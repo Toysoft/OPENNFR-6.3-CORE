@@ -36,6 +36,8 @@ RDEPENDS_${PN} = "\
     python-hyperlink \ 
     udpxy \
     nodejs \
+    tar \
+    zip \
     ofgwrite \
     python-gdata \
     libshowiframe \

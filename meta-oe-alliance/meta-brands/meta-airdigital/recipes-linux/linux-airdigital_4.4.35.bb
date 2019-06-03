@@ -9,7 +9,7 @@ SRCDATE = "20181121"
 
 inherit kernel machine_kernel_pr
 
-MACHINE_KERNEL_PR_append = ".25"
+MACHINE_KERNEL_PR_append = ".26"
 
 SRC_URI[md5sum] = "ede25f1c2c060f1059529a2896cee5a9"
 SRC_URI[sha256sum] = "ea4ba0433d252c18f38ff2f4dce4b70880e447e1cffdc2066d5a9b5f8098ae7e"
@@ -64,6 +64,11 @@ kernel_do_configure_prepend() {
 }
 
 kernel_do_install_append_h9combo() {
+	install -d ${D}${KERNEL_IMAGEDEST}
+	install -m 0755 ${WORKDIR}/findkerneldevice.sh ${D}${KERNEL_IMAGEDEST}
+}
+
+kernel_do_install_append_h10() {
 	install -d ${D}${KERNEL_IMAGEDEST}
 	install -m 0755 ${WORKDIR}/findkerneldevice.sh ${D}${KERNEL_IMAGEDEST}
 }

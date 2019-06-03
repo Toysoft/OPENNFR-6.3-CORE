@@ -378,8 +378,9 @@ class BBCooker:
         if CookerFeatures.BASEDATASTORE_TRACKING in self.featureset:
             self.disableDataTracking()
 
-        self.data.renameVar("__depends", "__base_depends")
-        self.add_filewatch(self.data.getVar("__base_depends", False), self.configwatcher)
+        for mc in self.databuilder.mcdata.values():
+            mc.renameVar("__depends", "__base_depends")
+            self.add_filewatch(mc.getVar("__base_depends", False), self.configwatcher)
 
         self.baseconfig_valid = True
         self.parsecache_valid = False
@@ -494,6 +495,7 @@ class BBCooker:
         """
         fn = None
         envdata = None
+        mc = ''
         if not pkgs_to_build:
             pkgs_to_build = []
 
@@ -502,6 +504,12 @@ class BBCooker:
             self.enableDataTracking()
             self.reset()
 
+        def mc_base(p):
+            if p.startswith('multiconfig:'):
+                s = p.split(':')
+                if len(s) == 2:
+                    return s[1]
+            return None
 
         if buildfile:
             # Parse the configuration here. We need to do it explicitly here since
@@ -512,18 +520,16 @@ class BBCooker:
             fn = self.matchFile(fn)
             fn = bb.cache.realfn2virtual(fn, cls, mc)
         elif len(pkgs_to_build) == 1:
-            ignore = self.data.getVar("ASSUME_PROVIDED") or ""
-            if pkgs_to_build[0] in set(ignore.split()):
-                bb.fatal("%s is in ASSUME_PROVIDED" % pkgs_to_build[0])
+            mc = mc_base(pkgs_to_build[0])
+            if not mc:
+                ignore = self.data.getVar("ASSUME_PROVIDED") or ""
+                if pkgs_to_build[0] in set(ignore.split()):
+                    bb.fatal("%s is in ASSUME_PROVIDED" % pkgs_to_build[0])
 
-            taskdata, runlist = self.buildTaskData(pkgs_to_build, None, self.configuration.abort, allowincomplete=True)
+                taskdata, runlist = self.buildTaskData(pkgs_to_build, None, self.configuration.abort, allowincomplete=True)
 
-            mc = runlist[0][0]
-            fn = runlist[0][3]
-        else:
-            envdata = self.data
-            data.expandKeys(envdata)
-            parse.ast.runAnonFuncs(envdata)
+                mc = runlist[0][0]
+                fn = runlist[0][3]
 
         if fn:
             try:
@@ -532,6 +538,12 @@ class BBCooker:
             except Exception as e:
                 parselog.exception("Unable to read %s", fn)
                 raise
+        else:
+            if not mc in self.databuilder.mcdata:
+                bb.fatal('Not multiconfig named "%s" found' % mc)
+            envdata = self.databuilder.mcdata[mc]
+            data.expandKeys(envdata)
+            parse.ast.runAnonFuncs(envdata)
 
         # Display history
         with closing(StringIO()) as env:

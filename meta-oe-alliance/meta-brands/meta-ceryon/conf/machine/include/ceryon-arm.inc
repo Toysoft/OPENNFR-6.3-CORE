@@ -1,4 +1,4 @@
-IMAGE_CLASSES += "ceryonemmc_image_multi"
+IMAGE_CLASSES += "ceryonemmc_image_multiboot"
 
 IMAGE_FSTYPES += "ceryonemmc"
 IMAGE_ROOTFS_SIZE ?= "589824"
