@@ -36,8 +36,6 @@ RDEPENDS_${PN} = "\
     python-hyperlink \ 
     udpxy \
     nodejs \
-    tar \
-    zip \
     ofgwrite \
     python-gdata \
     libshowiframe \
@@ -54,5 +52,7 @@ RDEPENDS_${PN} = "\
         iproute2 \
         ntfs-3g \
         unrar \
+    	tar \
+    	zip \
     ", d)} \
     "

@@ -4,7 +4,7 @@ SECTION = "base/shell"
 
 DEPENDS = "ncurses bison-native virtual/libiconv"
 
-inherit autotools gettext texinfo update-alternatives ptest
+inherit autotools gettext texinfo update-alternatives ptest useradd
 
 EXTRA_AUTORECONF += "--exclude=autoheader --exclude=aclocal"
 EXTRA_OECONF = "--enable-job-control --without-bash-malloc bash_cv_wexitstatus_offset=8"
