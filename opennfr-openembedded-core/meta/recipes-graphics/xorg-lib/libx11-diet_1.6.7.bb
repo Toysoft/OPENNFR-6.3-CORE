@@ -9,6 +9,7 @@ SRC_URI += "file://X18NCMSstubs.patch \
            "
 
 RPROVIDES_${PN}-dev = "libx11-dev"
+RPROVIDES_${PN}-locale = "libx11-locale"
 
 EXTRA_OECONF += "--disable-xlocale"
 

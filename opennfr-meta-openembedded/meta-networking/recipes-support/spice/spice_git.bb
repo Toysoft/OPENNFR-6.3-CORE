@@ -24,6 +24,7 @@ SRC_URI = " \
     git://anongit.freedesktop.org/spice/spice;name=spice \
     git://anongit.freedesktop.org/spice/spice-common;destsuffix=git/subprojects/spice-common;name=spice-common \
     file://0001-Convert-pthread_t-to-be-numeric.patch \
+    file://0001-Fix-compile-errors-on-Linux-32bit-system.patch \
 "
 
 S = "${WORKDIR}/git"
@@ -36,7 +37,7 @@ DEPENDS_append_class-nativesdk = "nativesdk-openssl"
 export PYTHON="${STAGING_BINDIR_NATIVE}/python-native/python"
 export PYTHONPATH="${PKG_CONFIG_SYSROOT_DIR}${libdir}/python2.7/site-packages"
 
-CFLAGS += "-Wno-address-of-packed-member"
+CFLAGS_append = " -Wno-error=address-of-packed-member"
 
 PACKAGECONFIG_class-native = ""
 PACKAGECONFIG_class-nativesdk = ""
