@@ -16,6 +16,7 @@ SRC_URI = "http://www.openssl.org/source/openssl-${PV}.tar.gz \
            file://0001-skip-test_symbol_presence.patch \
            file://0001-buildinfo-strip-sysroot-and-debug-prefix-map-from-co.patch \
            file://afalg.patch \
+           file://0001-Fix-build-error-for-aarch64-big-endian.patch \
            "
 
 SRC_URI_append_class-nativesdk = " \
@@ -166,8 +167,8 @@ do_install_ptest () {
 	cp -r ${S}/external ${B}/test ${S}/test ${B}/fuzz ${S}/util ${B}/util ${D}${PTEST_PATH}
 
 	# For test_shlibload
-	ln -s ${libdir}/libcrypto.so.1.1 ${D}${PTEST_PATH}/libcrypto.so
-	ln -s ${libdir}/libssl.so.1.1 ${D}${PTEST_PATH}/libssl.so
+	ln -s ${libdir}/libcrypto.so.1.1 ${D}${PTEST_PATH}/
+	ln -s ${libdir}/libssl.so.1.1 ${D}${PTEST_PATH}/
 
 	install -d ${D}${PTEST_PATH}/apps
 	ln -s ${bindir}/openssl ${D}${PTEST_PATH}/apps
