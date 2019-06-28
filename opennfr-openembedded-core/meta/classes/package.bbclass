@@ -237,7 +237,7 @@ def do_split_packages(d, root, file_regex, output_pattern, description, postinst
     d.setVar('PACKAGES', ' '.join(packages))
     return list(split_packages)
 
-PACKAGE_DEPENDS += "file-native"
+PACKAGE_DEPENDS += "file-native pigz-native"
 
 python () {
     if d.getVar('PACKAGES') != '':
@@ -1216,7 +1216,8 @@ python populate_packages () {
                 src = os.path.join(src, p)
                 dest = os.path.join(dest, p)
                 fstat = cpath.stat(src)
-                os.mkdir(dest, fstat.st_mode)
+                os.mkdir(dest)
+                os.chmod(dest, fstat.st_mode)
                 os.chown(dest, fstat.st_uid, fstat.st_gid)
                 if p not in seen:
                     seen.append(p)
