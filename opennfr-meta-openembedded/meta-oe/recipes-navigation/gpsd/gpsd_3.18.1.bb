@@ -13,13 +13,12 @@ EXTRANATIVEPATH += "chrpath-native"
 
 SRC_URI = "${SAVANNAH_GNU_MIRROR}/${BPN}/${BP}.tar.gz \
     file://0001-SConstruct-prefix-includepy-with-sysroot-and-drop-sy.patch \
-    file://0002-include-sys-ttydefaults.h.patch \
     file://0003-SConstruct-disable-html-and-man-docs-building-becaus.patch \
 "
 SRC_URI[md5sum] = "3b11f26b295010666b1767b308f90bc5"
 SRC_URI[sha256sum] = "5cb1e6d880ec9a52c62492dd0e3d77451b7c7ad625895bd652f6354215aec23e"
 
-inherit scons update-rc.d python-dir pythonnative systemd bluetooth update-alternatives
+inherit scons update-rc.d python-dir pythonnative systemd update-alternatives
 
 INITSCRIPT_PACKAGES = "gpsd-conf"
 INITSCRIPT_NAME = "gpsd"
@@ -31,13 +30,13 @@ export STAGING_INCDIR
 export STAGING_LIBDIR
 
 PACKAGECONFIG ??= "${@bb.utils.contains('DISTRO_FEATURES', 'bluetooth', 'bluez', '', d)}"
-PACKAGECONFIG[bluez] = "bluez='true',bluez='false',${BLUEZ}"
+PACKAGECONFIG[bluez] = "bluez='true',bluez='false',bluez5"
 PACKAGECONFIG[qt] = "qt='yes' qt_versioned=5,qt='no',qtbase"
 EXTRA_OESCONS = " \
     sysroot=${STAGING_DIR_TARGET} \
     libQgpsmm='false' \
-    debug='true' \
-    strip='false' \
+    debug='false' \
+    nostrip='true' \
     chrpath='yes' \
     systemd='${SYSTEMD_OESCONS}' \
     libdir='${libdir}' \
@@ -84,7 +83,9 @@ do_install_append() {
     #support for systemd
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/systemd/${BPN}.service ${D}${systemd_unitdir}/system/${BPN}.service
+    sed -i -e 's,/usr/local,/usr,g' ${D}${systemd_unitdir}/system/${BPN}.service
     install -m 0644 ${S}/systemd/${BPN}ctl@.service ${D}${systemd_unitdir}/system/${BPN}ctl@.service
+    sed -i -e 's,/usr/local,/usr,g' ${D}${systemd_unitdir}/system/${BPN}ctl@.service
     install -m 0644 ${S}/systemd/${BPN}.socket ${D}${systemd_unitdir}/system/${BPN}.socket
 }
 
